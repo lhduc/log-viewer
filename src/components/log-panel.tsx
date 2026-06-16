@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLogStream } from '@/hooks/use-log-stream'
 import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
 import { isJobEntry } from '@/lib/job-utils'
@@ -8,6 +8,10 @@ import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
 import { RequestDetail } from './request-detail'
 import type { HttpLogEntry, JobEntry } from '@/types/log'
+
+const DETAIL_WIDTH_DEFAULT = 55  // percent
+const DETAIL_WIDTH_MIN = 25
+const DETAIL_WIDTH_MAX = 80
 
 interface LogPanelProps {
   containerIds: string[]
@@ -21,10 +25,13 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<HttpLogEntry | null>(null)
+  const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
+
+  const splitRef = useRef<HTMLDivElement>(null)
+  const dragging = useRef(false)
 
   const httpEntries = useMemo(() => logs.filter(isHttpEntry), [logs])
 
-  // Index job entries by request_id for quick lookup in detail panel
   const jobsByRequestId = useMemo(() => {
     const map = new Map<string, JobEntry[]>()
     for (const entry of logs) {
@@ -60,6 +67,37 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
     setSearch('')
   }, [])
 
+  // Drag-to-resize the detail panel
+  const onDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    dragging.current = true
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!dragging.current || !splitRef.current) return
+      const rect = splitRef.current.getBoundingClientRect()
+      const pct = ((rect.right - ev.clientX) / rect.width) * 100
+      setDetailWidth(Math.min(DETAIL_WIDTH_MAX, Math.max(DETAIL_WIDTH_MIN, pct)))
+    }
+
+    const onMouseUp = () => {
+      dragging.current = false
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [])
+
+  // Reset width when panel closes
+  useEffect(() => {
+    if (!selected) setDetailWidth(DETAIL_WIDTH_DEFAULT)
+  }, [selected])
+
   const selectedJobs = selected?.request_id
     ? (jobsByRequestId.get(selected.request_id) ?? [])
     : []
@@ -85,8 +123,12 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
         onClearFilters={clearFilters}
       />
 
-      <div className="flex flex-1 min-h-0">
-        <div className={`flex flex-col min-h-0 transition-all duration-200 ${selected ? 'w-[45%]' : 'flex-1'}`}>
+      <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Request list */}
+        <div
+          className="flex flex-col min-h-0 overflow-hidden"
+          style={{ width: selected ? `${100 - detailWidth}%` : '100%' }}
+        >
           {filteredEntries.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
               {logs.length === 0 ? 'Waiting for logs…' : 'No requests match filters'}
@@ -100,14 +142,27 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
           )}
         </div>
 
+        {/* Drag divider + detail panel */}
         {selected && (
-          <div className="flex-1 flex flex-col min-h-0 animate-in slide-in-from-right-4 duration-200">
-            <RequestDetail
-              entry={selected}
-              onClose={() => setSelected(null)}
-              jobs={selectedJobs}
+          <>
+            {/* Resize handle */}
+            <div
+              onMouseDown={onDividerMouseDown}
+              className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40 transition-colors"
             />
-          </div>
+
+            {/* Detail panel with distinct background */}
+            <div
+              className="flex flex-col min-h-0 overflow-hidden bg-muted/30 animate-in slide-in-from-right-4 duration-200"
+              style={{ width: `${detailWidth}%` }}
+            >
+              <RequestDetail
+                entry={selected}
+                onClose={() => setSelected(null)}
+                jobs={selectedJobs}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>

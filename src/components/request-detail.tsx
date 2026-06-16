@@ -30,7 +30,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   const jobGroups = groupJobs(jobs)
 
   return (
-    <div className="flex flex-col h-full border-l border-border bg-background">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0 min-w-0">
         <span className={cn(
