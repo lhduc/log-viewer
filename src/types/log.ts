@@ -4,6 +4,7 @@ export interface ContainerInfo {
   image: string
   status: string
   state: string
+  project: string
 }
 
 export interface LogEntry {
