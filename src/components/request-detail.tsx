@@ -200,6 +200,34 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   const requestLogs = jobs.filter(e => !hasJobId(e))
   const jobGroups = groupJobs(jobEntries)
 
+  // Merge job groups and plain logs into a single ascending timeline
+  type TimelineItem =
+    | { kind: 'job'; group: JobGroup; t: number }
+    | { kind: 'log'; entry: LogEntry; t: number }
+
+  const toMs = (v: unknown) => {
+    const s = typeof v === 'string' ? v : ''
+    const n = Date.parse(s)
+    return isNaN(n) ? 0 : n
+  }
+
+  const timeline: TimelineItem[] = [
+    ...jobGroups.map(group => ({
+      kind: 'job' as const,
+      group,
+      t: toMs(
+        (group.started as Record<string,unknown> | undefined)?.timestamp
+        ?? (group.updates[0] as Record<string,unknown> | undefined)?.timestamp
+        ?? (group.completed as Record<string,unknown> | undefined)?.timestamp
+      ),
+    })),
+    ...requestLogs.map(entry => ({
+      kind: 'log' as const,
+      entry,
+      t: toMs((entry as Record<string,unknown>).timestamp ?? (entry as Record<string,unknown>).time),
+    })),
+  ].sort((a, b) => a.t - b.t)
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -251,24 +279,20 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
           </dl>
         </section>
 
-        {/* Jobs triggered by this request */}
-        {jobGroups.length > 0 && (
+        {/* Unified chronological timeline: jobs + request logs */}
+        {timeline.length > 0 && (
           <section className="px-4 py-3 border-b border-border">
-            <SectionHeader title={`Jobs (${jobGroups.length})`} />
-            <div className="flex flex-col gap-3">
-              {jobGroups.map(group => (
-                <JobGroupCard key={group.job_id} group={group} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Other request logs (no job_id) */}
-        {requestLogs.length > 0 && (
-          <section className="px-4 py-3 border-b border-border">
-            <SectionHeader title={`Logs (${requestLogs.length})`} />
-            <div className="flex flex-col border border-border rounded overflow-hidden">
-              {requestLogs.map((log, i) => <UpdateRow key={i} entry={log} />)}
+            <SectionHeader title={`Timeline (${timeline.length})`} />
+            <div className="flex flex-col gap-2">
+              {timeline.map((item, i) =>
+                item.kind === 'job'
+                  ? <JobGroupCard key={item.group.job_id} group={item.group} />
+                  : (
+                    <div key={i} className="border border-border rounded overflow-hidden">
+                      <UpdateRow entry={item.entry} />
+                    </div>
+                  )
+              )}
             </div>
           </section>
         )}
