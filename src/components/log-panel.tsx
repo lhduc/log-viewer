@@ -44,12 +44,32 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
     return map
   }, [logs])
 
+  // request_ids whose correlated jobs match the search (by job_id or job type).
+  // Lets a job_id/type query surface the parent request that triggered it.
+  const jobMatchedRequestIds = useMemo(() => {
+    const set = new Set<string>()
+    if (!search) return set
+    const q = search.toLowerCase()
+    for (const [reqId, jobs] of jobsByRequestId) {
+      if (jobs.some(j => j.job_id.toLowerCase().includes(q) || j.type.toLowerCase().includes(q))) {
+        set.add(reqId)
+      }
+    }
+    return set
+  }, [jobsByRequestId, search])
+
   const filteredEntries = useMemo(() => {
+    const q = search.toLowerCase()
     return httpEntries
       .filter(entry => {
         const passMethod = methodFilter.size === 0 || methodFilter.has(entry.method.toUpperCase())
         const passStatus = statusFilter === 'all' || getStatusBucket(entry.status) === statusFilter
-        const passSearch = !search || entry.uri.toLowerCase().includes(search.toLowerCase())
+        // Flexible search: match URI, request_id, or any correlated job_id/type
+        const reqId = entry.request_id?.toLowerCase()
+        const passSearch = !search
+          || entry.uri.toLowerCase().includes(q)
+          || (reqId?.includes(q) ?? false)
+          || (entry.request_id ? jobMatchedRequestIds.has(entry.request_id) : false)
         return passMethod && passStatus && passSearch
       })
       // Sort chronologically — logs arrive interleaved from parallel container streams
@@ -58,7 +78,7 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
         const tb = b.timestamp ? Date.parse(b.timestamp) : 0
         return ta - tb || a._seq - b._seq
       })
-  }, [httpEntries, methodFilter, statusFilter, search])
+  }, [httpEntries, methodFilter, statusFilter, search, jobMatchedRequestIds])
 
   const toggleMethod = useCallback((method: string) => {
     setMethodFilter(prev => {
