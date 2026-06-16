@@ -3,6 +3,7 @@
 import type { HttpLogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle, getUriPath } from '@/lib/request-utils'
 import { formatTimestamp } from '@/lib/log-utils'
+import { CopyButton } from './copy-button'
 import { cn } from '@/lib/utils'
 
 interface RequestRowProps {
@@ -20,7 +21,7 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
     <div
       onClick={onClick}
       className={cn(
-        'px-4 py-2 border-b border-border/50 cursor-pointer text-xs hover:bg-muted/50 transition-colors select-none',
+        'group px-4 py-2 border-b border-border/50 cursor-pointer text-xs hover:bg-muted/50 transition-colors select-none',
         selected && 'bg-muted border-l-2 border-l-primary'
       )}
     >
@@ -53,10 +54,13 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
         )}
       </div>
 
-      {/* Request ID — subtle secondary line for quick identification */}
+      {/* Request ID — subtle secondary line with copy button */}
       {requestId && (
-        <div className="mt-0.5 font-mono text-[10px] text-muted-foreground/60 truncate pl-[calc(3.5rem+0.75rem)]">
-          {requestId}
+        <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
+          <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <CopyButton value={requestId} />
+          </span>
         </div>
       )}
     </div>

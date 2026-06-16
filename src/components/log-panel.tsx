@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLogStream } from '@/hooks/use-log-stream'
 import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
-import { isJobEntry } from '@/lib/job-utils'
+import { hasJobId } from '@/lib/job-utils'
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
 import { RequestDetail } from './request-detail'
-import type { HttpLogEntry, JobEntry } from '@/types/log'
+import type { HttpLogEntry, LogEntry } from '@/types/log'
 
 const DETAIL_WIDTH_DEFAULT = 55  // percent
 const DETAIL_WIDTH_MIN = 25
@@ -33,25 +33,32 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
   const httpEntries = useMemo(() => logs.filter(isHttpEntry), [logs])
 
   const jobsByRequestId = useMemo(() => {
-    const map = new Map<string, JobEntry[]>()
+    const map = new Map<string, LogEntry[]>()
     for (const entry of logs) {
-      if (isJobEntry(entry) && entry.request_id) {
-        const list = map.get(entry.request_id) ?? []
+      const e = entry as Record<string, unknown>
+      const reqId = typeof e.request_id === 'string' ? e.request_id : null
+      if (reqId && hasJobId(entry)) {
+        const list = map.get(reqId) ?? []
         list.push(entry)
-        map.set(entry.request_id, list)
+        map.set(reqId, list)
       }
     }
     return map
   }, [logs])
 
-  // request_ids whose correlated jobs match the search (by job_id or job type).
-  // Lets a job_id/type query surface the parent request that triggered it.
+  // request_ids whose correlated jobs match the search (by job_id or msg content).
   const jobMatchedRequestIds = useMemo(() => {
     const set = new Set<string>()
     if (!search) return set
     const q = search.toLowerCase()
-    for (const [reqId, jobs] of jobsByRequestId) {
-      if (jobs.some(j => j.job_id.toLowerCase().includes(q) || j.type.toLowerCase().includes(q))) {
+    for (const [reqId, entries] of jobsByRequestId) {
+      if (entries.some(e => {
+        const r = e as Record<string, unknown>
+        const jobId = typeof r.job_id === 'string' ? r.job_id.toLowerCase() : ''
+        const type = typeof r.type === 'string' ? r.type.toLowerCase() : ''
+        const msg = typeof r.msg === 'string' ? r.msg.toLowerCase() : ''
+        return jobId.includes(q) || type.includes(q) || msg.includes(q)
+      })) {
         set.add(reqId)
       }
     }

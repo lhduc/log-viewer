@@ -1,15 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CopyButtonProps {
   value: string
   className?: string
-  label?: string
 }
 
-export function CopyButton({ value, className, label }: CopyButtonProps) {
+export function CopyButton({ value, className }: CopyButtonProps) {
   const [copied, setCopied] = useState(false)
 
   const onCopy = async (e: React.MouseEvent) => {
@@ -19,7 +19,7 @@ export function CopyButton({ value, className, label }: CopyButtonProps) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
-      // Clipboard API unavailable (e.g. non-secure context) — silently ignore
+      // Clipboard API unavailable — silently ignore
     }
   }
 
@@ -27,12 +27,15 @@ export function CopyButton({ value, className, label }: CopyButtonProps) {
     <button
       onClick={onCopy}
       className={cn(
-        'shrink-0 inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors',
+        'shrink-0 inline-flex items-center justify-center w-5 h-5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors',
         className
       )}
       aria-label="Copy"
     >
-      {copied ? '✓ Copied' : (label ?? 'Copy')}
+      {copied
+        ? <Check size={11} className="text-green-500" />
+        : <Copy size={11} />
+      }
     </button>
   )
 }
