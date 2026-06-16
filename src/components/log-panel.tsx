@@ -45,12 +45,19 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
   }, [logs])
 
   const filteredEntries = useMemo(() => {
-    return httpEntries.filter(entry => {
-      const passMethod = methodFilter.size === 0 || methodFilter.has(entry.method.toUpperCase())
-      const passStatus = statusFilter === 'all' || getStatusBucket(entry.status) === statusFilter
-      const passSearch = !search || entry.uri.toLowerCase().includes(search.toLowerCase())
-      return passMethod && passStatus && passSearch
-    })
+    return httpEntries
+      .filter(entry => {
+        const passMethod = methodFilter.size === 0 || methodFilter.has(entry.method.toUpperCase())
+        const passStatus = statusFilter === 'all' || getStatusBucket(entry.status) === statusFilter
+        const passSearch = !search || entry.uri.toLowerCase().includes(search.toLowerCase())
+        return passMethod && passStatus && passSearch
+      })
+      // Sort chronologically — logs arrive interleaved from parallel container streams
+      .sort((a, b) => {
+        const ta = a.timestamp ? Date.parse(a.timestamp) : 0
+        const tb = b.timestamp ? Date.parse(b.timestamp) : 0
+        return ta - tb || a._seq - b._seq
+      })
   }, [httpEntries, methodFilter, statusFilter, search])
 
   const toggleMethod = useCallback((method: string) => {
