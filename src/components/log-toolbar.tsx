@@ -4,44 +4,49 @@ import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { METHOD_STYLES, STATUS_STYLES } from '@/lib/request-utils'
 import { cn } from '@/lib/utils'
 
-const LEVELS = ['error', 'warn', 'info', 'debug', 'trace'] as const
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const
+const STATUS_BUCKETS = ['2xx', '3xx', '4xx', '5xx'] as const
 
-const LEVEL_BADGE_STYLES: Record<string, { base: string; active: string }> = {
-  error: { base: 'border-red-300 text-red-600 dark:border-red-800 dark:text-red-400',       active: 'bg-red-100 dark:bg-red-950' },
-  warn:  { base: 'border-amber-300 text-amber-600 dark:border-yellow-800 dark:text-yellow-400', active: 'bg-amber-100 dark:bg-yellow-950' },
-  info:  { base: 'border-blue-300 text-blue-600 dark:border-blue-800 dark:text-blue-400',    active: 'bg-blue-100 dark:bg-blue-950' },
-  debug: { base: 'border-gray-300 text-gray-500 dark:border-gray-700 dark:text-gray-400',   active: 'bg-gray-100 dark:bg-gray-800' },
-  trace: { base: 'border-gray-200 text-gray-400 dark:border-gray-800 dark:text-gray-600',   active: 'bg-gray-50 dark:bg-gray-900' },
+const METHOD_BADGE: Record<string, { base: string; active: string }> = {
+  GET:    { base: 'text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-700',     active: 'bg-blue-100 dark:bg-blue-950' },
+  POST:   { base: 'text-green-600 border-green-300 dark:text-green-400 dark:border-green-700', active: 'bg-green-100 dark:bg-green-950' },
+  PUT:    { base: 'text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700', active: 'bg-amber-100 dark:bg-amber-950' },
+  PATCH:  { base: 'text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-700', active: 'bg-orange-100 dark:bg-orange-950' },
+  DELETE: { base: 'text-red-600 border-red-300 dark:text-red-400 dark:border-red-700',         active: 'bg-red-100 dark:bg-red-950' },
+}
+
+const STATUS_BADGE: Record<string, { base: string; active: string }> = {
+  '2xx': { base: 'text-green-600 border-green-300 dark:text-green-400 dark:border-green-700', active: 'bg-green-100 dark:bg-green-950' },
+  '3xx': { base: 'text-blue-500 border-blue-300 dark:text-blue-400 dark:border-blue-700',    active: 'bg-blue-100 dark:bg-blue-950' },
+  '4xx': { base: 'text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-700', active: 'bg-amber-100 dark:bg-amber-950' },
+  '5xx': { base: 'text-red-600 border-red-300 dark:text-red-400 dark:border-red-700',         active: 'bg-red-100 dark:bg-red-950' },
 }
 
 interface LogToolbarProps {
-  levelFilter: Set<string>
+  methodFilter: Set<string>
+  statusFilter: string
   search: string
-  streamFilter: 'both' | 'stdout' | 'stderr'
-  rawMode: boolean
   filteredCount: number
   totalCount: number
-  onToggleLevel: (level: string) => void
+  onToggleMethod: (method: string) => void
+  onStatusFilter: (value: string) => void
   onSearch: (value: string) => void
-  onStreamFilter: (value: 'both' | 'stdout' | 'stderr') => void
-  onToggleRaw: () => void
   onClear: () => void
   onClearFilters: () => void
 }
 
 export function LogToolbar({
-  levelFilter,
+  methodFilter,
+  statusFilter,
   search,
-  streamFilter,
-  rawMode,
   filteredCount,
   totalCount,
-  onToggleLevel,
+  onToggleMethod,
+  onStatusFilter,
   onSearch,
-  onStreamFilter,
-  onToggleRaw,
   onClear,
   onClearFilters,
 }: LogToolbarProps) {
@@ -52,27 +57,27 @@ export function LogToolbar({
     return () => clearTimeout(timer)
   }, [inputValue, onSearch])
 
-  const hasFilters = levelFilter.size > 0 || search || streamFilter !== 'both'
+  const hasFilters = methodFilter.size > 0 || statusFilter !== 'all' || !!search
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40 flex-wrap">
-      {/* Level filter chips */}
+      {/* Method chips */}
       <div className="flex items-center gap-1">
-        {LEVELS.map(level => {
-          const active = levelFilter.has(level)
-          const styles = LEVEL_BADGE_STYLES[level]
+        {METHODS.map(method => {
+          const active = methodFilter.has(method)
+          const s = METHOD_BADGE[method]
           return (
             <Badge
-              key={level}
+              key={method}
               variant="outline"
-              onClick={() => onToggleLevel(level)}
+              onClick={() => onToggleMethod(method)}
               className={cn(
-                'cursor-pointer uppercase text-[10px] px-1.5 py-0 h-5 select-none transition-colors',
-                styles.base,
-                active ? styles.active : 'opacity-50'
+                'cursor-pointer font-mono text-[10px] px-1.5 py-0 h-5 select-none transition-colors',
+                s.base,
+                active ? s.active : 'opacity-50'
               )}
             >
-              {level}
+              {method}
             </Badge>
           )
         })}
@@ -80,51 +85,55 @@ export function LogToolbar({
 
       <div className="w-px h-4 bg-border" />
 
-      {/* Stream filter */}
+      {/* Status chips */}
       <div className="flex items-center gap-1">
-        {(['both', 'stdout', 'stderr'] as const).map(s => (
-          <button
-            key={s}
-            onClick={() => onStreamFilter(s)}
-            className={cn(
-              'text-[10px] px-2 py-0.5 rounded border transition-colors',
-              streamFilter === s
-                ? 'border-border text-foreground bg-accent'
-                : 'border-border text-muted-foreground hover:text-foreground'
-            )}
-          >
-            {s}
-          </button>
-        ))}
+        {STATUS_BUCKETS.map(bucket => {
+          const active = statusFilter === bucket
+          const s = STATUS_BADGE[bucket]
+          return (
+            <Badge
+              key={bucket}
+              variant="outline"
+              onClick={() => onStatusFilter(active ? 'all' : bucket)}
+              className={cn(
+                'cursor-pointer font-mono text-[10px] px-1.5 py-0 h-5 select-none transition-colors',
+                s.base,
+                active ? s.active : 'opacity-50'
+              )}
+            >
+              {bucket}
+            </Badge>
+          )
+        })}
       </div>
 
       <div className="w-px h-4 bg-border" />
 
-      {/* Search */}
+      {/* URI search */}
       <Input
         value={inputValue}
         onChange={e => setInputValue(e.target.value)}
-        placeholder="Search logs…"
-        className="h-6 text-xs w-40"
+        placeholder="Search URI…"
+        className="h-6 text-xs w-44"
       />
 
       <div className="flex-1" />
 
-      {/* Counts */}
       <span className="text-[10px] text-muted-foreground shrink-0">
         {filteredCount} / {totalCount}
       </span>
 
-      {/* Actions */}
       {hasFilters && (
         <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={onClearFilters}>
           Clear filters
         </Button>
       )}
-      <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={onToggleRaw}>
-        {rawMode ? 'Structured' : 'Raw'}
-      </Button>
-      <Button variant="ghost" size="sm" className="h-6 text-xs px-2 text-destructive hover:text-destructive" onClick={onClear}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 text-xs px-2 text-destructive hover:text-destructive"
+        onClick={onClear}
+      >
         Clear
       </Button>
     </div>

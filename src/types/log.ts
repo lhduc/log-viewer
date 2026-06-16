@@ -15,3 +15,14 @@ export interface LogEntry {
   _raw?: boolean
   _seq: number
 }
+
+export interface HttpLogEntry extends LogEntry {
+  method: string
+  uri: string
+  status: number
+  seconds: number
+  ip?: string
+  request_id?: string
+  response?: unknown
+  msg?: string
+}

@@ -20,9 +20,7 @@ export function ContainerTabs() {
       }
       const data: ContainerInfo[] = await res.json()
       setContainers(data)
-      if (!activeTab && data.length > 0) {
-        setActiveTab(data[0].id)
-      }
+      setActiveTab(prev => prev || (data.length > 0 ? data[0].id : ''))
     } catch {
       setError('Cannot reach server')
     }
