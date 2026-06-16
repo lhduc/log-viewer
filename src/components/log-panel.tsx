@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLogStream } from '@/hooks/use-log-stream'
 import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
 import { hasJobId } from '@/lib/job-utils'
+import { useTimeMode } from '@/contexts/time-mode-context'
 
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
@@ -21,10 +22,13 @@ interface LogPanelProps {
 
 export function LogPanel({ containerIds, active }: LogPanelProps) {
   const { logs, connected, error, clear } = useLogStream(containerIds, active)
+  const { mode: timeMode } = useTimeMode()
 
   const [methodFilter, setMethodFilter] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [timeFrom, setTimeFrom] = useState('')
+  const [timeTo, setTimeTo] = useState('')
   const [selected, setSelected] = useState<HttpLogEntry | null>(null)
   const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
 
@@ -73,13 +77,17 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
       .filter(entry => {
         const passMethod = methodFilter.size === 0 || methodFilter.has(entry.method.toUpperCase())
         const passStatus = statusFilter === 'all' || getStatusBucket(entry.status) === statusFilter
-        // Flexible search: match URI, request_id, or any correlated job_id/type
         const reqId = entry.request_id?.toLowerCase()
         const passSearch = !search
           || entry.uri.toLowerCase().includes(q)
           || (reqId?.includes(q) ?? false)
           || (entry.request_id ? jobMatchedRequestIds.has(entry.request_id) : false)
-        return passMethod && passStatus && passSearch
+        const entryMs = entry.timestamp ? Date.parse(entry.timestamp) : 0
+        // datetime-local value is always local time; append 'Z' to treat as UTC when in UTC mode
+        const fromMs = timeFrom ? Date.parse(timeMode === 'utc' ? timeFrom + 'Z' : timeFrom) : 0
+        const toMs = timeTo ? Date.parse(timeMode === 'utc' ? timeTo + 'Z' : timeTo) : 0
+        const passTime = (!timeFrom || entryMs >= fromMs) && (!timeTo || entryMs <= toMs)
+        return passMethod && passStatus && passSearch && passTime
       })
       // Sort chronologically — logs arrive interleaved from parallel container streams
       .sort((a, b) => {
@@ -87,7 +95,7 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
         const tb = b.timestamp ? Date.parse(b.timestamp) : 0
         return ta - tb || a._seq - b._seq
       })
-  }, [httpEntries, methodFilter, statusFilter, search, jobMatchedRequestIds])
+  }, [httpEntries, methodFilter, statusFilter, search, jobMatchedRequestIds, timeFrom, timeTo, timeMode])
 
   const toggleMethod = useCallback((method: string) => {
     setMethodFilter(prev => {
@@ -101,6 +109,8 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
     setMethodFilter(new Set())
     setStatusFilter('all')
     setSearch('')
+    setTimeFrom('')
+    setTimeTo('')
   }, [])
 
   // Drag-to-resize the detail panel
@@ -150,11 +160,15 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
         methodFilter={methodFilter}
         statusFilter={statusFilter}
         search={search}
+        timeFrom={timeFrom}
+        timeTo={timeTo}
         filteredCount={filteredEntries.length}
         totalCount={httpEntries.length}
         onToggleMethod={toggleMethod}
         onStatusFilter={setStatusFilter}
         onSearch={setSearch}
+        onTimeFrom={setTimeFrom}
+        onTimeTo={setTimeTo}
         onClear={clear}
         onClearFilters={clearFilters}
       />

@@ -5,7 +5,21 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { METHOD_STYLES, STATUS_STYLES } from '@/lib/request-utils'
+import { useTimeMode } from '@/contexts/time-mode-context'
 import { cn } from '@/lib/utils'
+
+const QUICK_RANGES = [
+  { label: '5m', minutes: 5 },
+  { label: '10m', minutes: 10 },
+  { label: '30m', minutes: 30 },
+  { label: '1h', minutes: 60 },
+] as const
+
+function toDatetimeLocal(d: Date, utc: boolean): string {
+  if (utc) return d.toISOString().slice(0, 19)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+}
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const
 const STATUS_BUCKETS = ['2xx', '3xx', '4xx', '5xx'] as const
@@ -59,6 +73,7 @@ export function LogToolbar({
   onClearFilters,
 }: LogToolbarProps) {
   const [inputValue, setInputValue] = useState(search)
+  const { mode } = useTimeMode()
 
   useEffect(() => {
     const timer = setTimeout(() => onSearch(inputValue), 300)
@@ -124,6 +139,27 @@ export function LogToolbar({
         placeholder="Search URI, request ID, job ID…"
         className="h-6 text-xs w-60"
       />
+
+      <div className="w-px h-4 bg-border" />
+
+      {/* Quick ranges */}
+      <div className="flex items-center gap-1">
+        {QUICK_RANGES.map(range => (
+          <Badge
+            key={range.label}
+            variant="outline"
+            onClick={() => {
+              const now = new Date()
+              const from = new Date(now.getTime() - range.minutes * 60000)
+              onTimeFrom(toDatetimeLocal(from, mode === 'utc'))
+              onTimeTo('')
+            }}
+            className="cursor-pointer font-mono text-[10px] px-1.5 py-0 h-5 select-none text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            {range.label}
+          </Badge>
+        ))}
+      </div>
 
       <div className="w-px h-4 bg-border" />
 
