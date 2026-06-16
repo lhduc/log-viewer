@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import type { HttpLogEntry, LogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle } from '@/lib/request-utils'
-import { groupJobs, getJobDuration, type JobGroup } from '@/lib/job-utils'
+import { groupJobs, getJobDuration, hasJobId, type JobGroup } from '@/lib/job-utils'
 import { formatTimestamp } from '@/lib/log-utils'
 import { JsonViewer } from './json-viewer'
 import { CopyButton } from './copy-button'
@@ -49,8 +49,48 @@ function isFailed(job: LogEntry | undefined): boolean {
   return typeof e.error === 'string' || typeof e.exception === 'string'
 }
 
-function JobGroupCard({ group }: { group: JobGroup }) {
+function callerFile(caller: unknown): string | null {
+  if (typeof caller !== 'string') return null
+  const parts = caller.split('/')
+  return parts[parts.length - 1] ?? null
+}
+
+function UpdateRow({ entry }: { entry: LogEntry }) {
   const [expanded, setExpanded] = useState(false)
+  const e = entry as Record<string, unknown>
+  const msg = typeof e.msg === 'string' ? e.msg : ''
+  const caller = callerFile(e.caller)
+  const level = typeof e.level === 'string' ? e.level : ''
+  const isDebug = level.toUpperCase() === 'DEBUG'
+  const time = formatTimestamp(e.timestamp ?? e.time ?? e.ts)
+
+  return (
+    <div className="border-t border-border/40">
+      <div
+        className="flex items-start gap-2 px-2.5 py-1.5 cursor-pointer hover:bg-muted/30"
+        onClick={() => setExpanded(v => !v)}
+      >
+        <span className={cn(
+          'shrink-0 font-semibold text-[10px] uppercase w-9 mt-px',
+          isDebug ? 'text-muted-foreground/50' : 'text-blue-500 dark:text-blue-400'
+        )}>{level}</span>
+        <span className="flex-1 break-all text-muted-foreground font-mono text-xs">{msg}</span>
+        <div className="shrink-0 flex flex-col items-end gap-0.5">
+          {time && <span className="text-muted-foreground/50 text-[10px] font-mono">{time}</span>}
+          {caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{caller}</span>}
+        </div>
+      </div>
+      {expanded && (
+        <div className="px-2.5 pb-2">
+          <JsonViewer data={jobPayload(entry)} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function JobGroupCard({ group }: { group: JobGroup }) {
+  const [collapsed, setCollapsed] = useState(true)
   const { job_id, type, started, completed, updates } = group
   const duration = getJobDuration(group)
   const isCompleted = !!completed
@@ -60,50 +100,45 @@ function JobGroupCard({ group }: { group: JobGroup }) {
 
   const startedE = started as Record<string, unknown> | undefined
   const completedE = completed as Record<string, unknown> | undefined
-
   const retry = typeof startedE?.retry === 'number' ? startedE.retry as number : undefined
   const maxRetry = typeof startedE?.max_retry === 'number' ? startedE.max_retry as number : undefined
 
-  const displayMsg = completedE
-    ? (typeof completedE.msg === 'string' ? completedE.msg : null)
-    : (typeof (started as Record<string, unknown> | undefined)?.msg === 'string'
-        ? (started as Record<string, unknown>).msg as string
-        : null)
+  // Derive processor name from first update's msg prefix (snake_case word before space)
+  const firstUpdateMsg = typeof (updates[0] as Record<string, unknown> | undefined)?.msg === 'string'
+    ? (updates[0] as Record<string, unknown>).msg as string : ''
+  const processorName = /^[a-z][a-z0-9_]+/.test(firstUpdateMsg) ? firstUpdateMsg.split(' ')[0] : null
+  const showProcessor = processorName && processorName !== type
+
   const errorDetail = (completedE?.error as string | undefined) ?? (completedE?.exception as string | undefined)
 
-  const latestUpdate = updates.length > 0 ? updates[updates.length - 1] as Record<string, unknown> : null
-  const latestMsg = typeof latestUpdate?.msg === 'string' ? latestUpdate.msg : null
-
-  const rawStarted = started ? jobPayload(started) : null
-  const rawCompleted = completed ? jobPayload(completed) : null
-  const hasJson = (rawStarted && Object.keys(rawStarted).length > 0)
-    || (rawCompleted && Object.keys(rawCompleted).length > 0)
-    || updates.length > 0
-
   return (
-    <div className={cn(
-      'text-xs border rounded',
-      failed ? 'border-red-500/50 bg-red-500/5' : 'border-border'
-    )}>
-      {/* Header row */}
-      <div
-        className={cn('flex items-center gap-2 px-2.5 py-1.5 flex-wrap', hasJson && 'cursor-pointer hover:bg-muted/30')}
-        onClick={() => hasJson && setExpanded(v => !v)}
-      >
+    <div className={cn('text-xs border rounded', failed ? 'border-red-500/50 bg-red-500/5' : 'border-border')}>
+
+      {/* Header */}
+      <div className="flex items-center gap-2 px-2.5 py-1.5 flex-wrap cursor-pointer hover:bg-muted/30" onClick={() => setCollapsed(v => !v)}>
         <span className={cn(
           'shrink-0 font-bold leading-none',
           failed ? 'text-red-500 text-base' : isCompleted ? 'text-green-500 text-sm' : isRunning ? 'text-amber-500 text-sm' : 'text-muted-foreground text-sm'
         )}>
           {failed ? '⚠' : isCompleted ? '✓' : isRunning ? '…' : isPollOnly ? '↻' : '?'}
         </span>
-        <span className={cn('font-mono font-medium', failed ? 'text-red-400' : 'text-foreground')}>{type}</span>
-        {duration && <span className="text-muted-foreground">{duration}</span>}
-        {isRunning && <span className="text-amber-500">running</span>}
+        <div className="flex flex-col ml-1">
+          <span className={cn('font-mono font-medium', failed ? 'text-red-400' : 'text-foreground')}>{type}</span>
+          {showProcessor && (
+            <span className="font-mono text-[10px] text-muted-foreground">{processorName}</span>
+          )}
+        </div>
         {updates.length > 0 && (
           <span className="px-1.5 py-0.5 rounded border font-mono font-semibold text-[10px] text-sky-600 border-sky-300 bg-sky-50 dark:text-sky-300 dark:border-sky-600 dark:bg-sky-950">
             ↻ {updates.length}×
           </span>
         )}
+        {duration && (
+          <span className="px-1.5 py-0.5 rounded border font-mono text-[10px] text-muted-foreground border-border bg-muted/50">
+            {duration}
+          </span>
+        )}
+        {isRunning && <span className="text-amber-500 text-[10px]">running</span>}
         {retry !== undefined && maxRetry !== undefined && (
           <span className="px-1.5 py-0.5 rounded border font-mono font-semibold text-[10px] text-purple-600 border-purple-400 bg-purple-100 dark:text-purple-300 dark:border-purple-500 dark:bg-purple-950">
             retry {retry}/{maxRetry}
@@ -113,66 +148,44 @@ function JobGroupCard({ group }: { group: JobGroup }) {
           <span className="font-mono text-[10px] text-muted-foreground break-all">{job_id}</span>
           <CopyButton value={job_id} />
         </span>
-        {hasJson && (
-          <span className="text-muted-foreground text-[10px]">{expanded ? '▲' : '▼'}</span>
-        )}
+        <span className="text-muted-foreground text-[10px]">{collapsed ? '▼' : '▲'}</span>
       </div>
 
-      {/* Completion/failure message */}
-      {displayMsg && (
-        <div className={cn('px-2.5 pb-1.5 font-mono text-[11px] break-all', failed ? 'text-red-400' : 'text-muted-foreground')}>
-          {displayMsg}
+      {!collapsed && <>
+      {/* Started — compact msg + caller + time */}
+      {started && (
+        <div className="flex items-start gap-2 px-2.5 py-1.5 border-t border-border/40 text-muted-foreground/70">
+          <span className="shrink-0 text-[10px] mt-0.5">▶</span>
+          <span className="flex-1 break-all font-mono text-xs">{typeof startedE?.msg === 'string' ? startedE.msg : ''}</span>
+          <div className="shrink-0 flex flex-col items-end gap-0.5">
+            {!!startedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(startedE.timestamp as string)}</span>}
+            {!!startedE?.caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(startedE!.caller as string)}</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Updates — each row clickable to expand full JSON */}
+      {updates.map((u, i) => <UpdateRow key={i} entry={u} />)}
+
+      {/* Completed — compact msg + caller + time */}
+      {completed && (
+        <div className={cn('flex items-start gap-2 px-2.5 py-1.5 border-t border-border/40', failed ? 'text-red-400' : 'text-muted-foreground/70')}>
+          <span className="shrink-0 text-[10px] mt-0.5">{failed ? '✕' : '■'}</span>
+          <span className="flex-1 break-all font-mono text-xs">{typeof completedE?.msg === 'string' ? completedE.msg : ''}</span>
+          <div className="shrink-0 flex flex-col items-end gap-0.5">
+            {!!completedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(completedE.timestamp as string)}</span>}
+            {!!completedE?.caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(completedE!.caller as string)}</span>}
+          </div>
         </div>
       )}
 
       {/* Error/exception detail */}
       {errorDetail && (
-        <div className="px-2.5 pb-1.5 font-mono text-[11px] break-all text-red-300 whitespace-pre-wrap">
+        <div className="px-2.5 pb-1.5 font-mono text-[11px] break-all text-red-300 whitespace-pre-wrap border-t border-border/40">
           {errorDetail}
         </div>
       )}
-
-      {/* Latest poll message preview (when collapsed) */}
-      {!expanded && latestMsg && !displayMsg && (
-        <div className="px-2.5 pb-1.5 font-mono text-[11px] break-all text-muted-foreground/70 italic">
-          {latestMsg}
-        </div>
-      )}
-
-      {/* Expandable section */}
-      {expanded && (
-        <div className="border-t border-border px-2.5 py-2 flex flex-col gap-2">
-          {rawStarted && Object.keys(rawStarted).length > 0 && (
-            <div>
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Started</div>
-              <JsonViewer data={rawStarted} />
-            </div>
-          )}
-          {rawCompleted && Object.keys(rawCompleted).length > 0 && (
-            <div>
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Completed</div>
-              <JsonViewer data={rawCompleted} />
-            </div>
-          )}
-          {updates.length > 0 && (
-            <div>
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                Poll updates ({updates.length})
-              </div>
-              <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto">
-                {updates.map((u, i) => {
-                  const payload = jobPayload(u)
-                  return (
-                    <div key={i} className="border border-border/50 rounded">
-                      <JsonViewer data={payload} />
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      </>}
     </div>
   )
 }
@@ -183,7 +196,9 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   const { _stream, _raw, _seq, method, uri, status, seconds, ip, request_id, request, response, timestamp, level, msg, message, time: _t, ts: _ts, ...extra } = entry as HttpLogEntry & Record<string, unknown>
   const hasExtra = Object.keys(extra).length > 0
 
-  const jobGroups = groupJobs(jobs)
+  const jobEntries = jobs.filter(hasJobId)
+  const requestLogs = jobs.filter(e => !hasJobId(e))
+  const jobGroups = groupJobs(jobEntries)
 
   return (
     <div className="flex flex-col h-full">
@@ -244,6 +259,16 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
               {jobGroups.map(group => (
                 <JobGroupCard key={group.job_id} group={group} />
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* Other request logs (no job_id) */}
+        {requestLogs.length > 0 && (
+          <section className="px-4 py-3 border-b border-border">
+            <SectionHeader title={`Logs (${requestLogs.length})`} />
+            <div className="flex flex-col border border-border rounded overflow-hidden">
+              {requestLogs.map((log, i) => <UpdateRow key={i} entry={log} />)}
             </div>
           </section>
         )}

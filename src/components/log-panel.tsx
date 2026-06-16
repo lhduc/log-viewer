@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLogStream } from '@/hooks/use-log-stream'
 import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
 import { hasJobId } from '@/lib/job-utils'
+
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
 import { RequestDetail } from './request-detail'
@@ -35,9 +36,10 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
   const jobsByRequestId = useMemo(() => {
     const map = new Map<string, LogEntry[]>()
     for (const entry of logs) {
+      if (isHttpEntry(entry)) continue
       const e = entry as Record<string, unknown>
       const reqId = typeof e.request_id === 'string' ? e.request_id : null
-      if (reqId && hasJobId(entry)) {
+      if (reqId) {
         const list = map.get(reqId) ?? []
         list.push(entry)
         map.set(reqId, list)
