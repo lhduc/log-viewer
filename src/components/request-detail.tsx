@@ -5,6 +5,7 @@ import type { HttpLogEntry, LogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle } from '@/lib/request-utils'
 import { groupJobs, getJobDuration, hasJobId, type JobGroup } from '@/lib/job-utils'
 import { formatTimestamp } from '@/lib/log-utils'
+import { useTimeMode } from '@/contexts/time-mode-context'
 import { JsonViewer } from './json-viewer'
 import { CopyButton } from './copy-button'
 import { cn } from '@/lib/utils'
@@ -57,12 +58,13 @@ function callerFile(caller: unknown): string | null {
 
 function UpdateRow({ entry }: { entry: LogEntry }) {
   const [expanded, setExpanded] = useState(false)
+  const { mode } = useTimeMode()
   const e = entry as Record<string, unknown>
   const msg = typeof e.msg === 'string' ? e.msg : ''
   const caller = callerFile(e.caller)
   const level = typeof e.level === 'string' ? e.level : ''
   const isDebug = level.toUpperCase() === 'DEBUG'
-  const time = formatTimestamp(e.timestamp ?? e.time ?? e.ts)
+  const time = formatTimestamp(e.timestamp ?? e.time ?? e.ts, mode === 'utc', true)
 
   return (
     <div className="border-t border-border/40">
@@ -91,6 +93,8 @@ function UpdateRow({ entry }: { entry: LogEntry }) {
 
 function JobGroupCard({ group }: { group: JobGroup }) {
   const [collapsed, setCollapsed] = useState(true)
+  const { mode } = useTimeMode()
+  const utc = mode === 'utc'
   const { job_id, type, started, completed, updates } = group
   const duration = getJobDuration(group)
   const isCompleted = !!completed
@@ -158,7 +162,7 @@ function JobGroupCard({ group }: { group: JobGroup }) {
           <span className="shrink-0 text-[10px] mt-0.5">▶</span>
           <span className="flex-1 break-all font-mono text-xs">{typeof startedE?.msg === 'string' ? startedE.msg : ''}</span>
           <div className="shrink-0 flex flex-col items-end gap-0.5">
-            {!!startedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(startedE.timestamp as string)}</span>}
+            {!!startedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(startedE.timestamp as string, utc, true)}</span>}
             {!!startedE?.caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(startedE!.caller as string)}</span>}
           </div>
         </div>
@@ -173,7 +177,7 @@ function JobGroupCard({ group }: { group: JobGroup }) {
           <span className="shrink-0 text-[10px] mt-0.5">{failed ? '✕' : '■'}</span>
           <span className="flex-1 break-all font-mono text-xs">{typeof completedE?.msg === 'string' ? completedE.msg : ''}</span>
           <div className="shrink-0 flex flex-col items-end gap-0.5">
-            {!!completedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(completedE.timestamp as string)}</span>}
+            {!!completedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(completedE.timestamp as string, utc, true)}</span>}
             {!!completedE?.caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(completedE!.caller as string)}</span>}
           </div>
         </div>
@@ -191,7 +195,9 @@ function JobGroupCard({ group }: { group: JobGroup }) {
 }
 
 export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
-  const time = formatTimestamp(entry.timestamp ?? (entry as Record<string, unknown>).time ?? (entry as Record<string, unknown>).ts)
+  const { mode } = useTimeMode()
+  const utc = mode === 'utc'
+  const time = formatTimestamp(entry.timestamp ?? (entry as Record<string, unknown>).time ?? (entry as Record<string, unknown>).ts, utc)
 
   const { _stream, _raw, _seq, method, uri, status, seconds, ip, request_id, request, response, timestamp, level, msg, message, time: _t, ts: _ts, ...extra } = entry as HttpLogEntry & Record<string, unknown>
   const hasExtra = Object.keys(extra).length > 0

@@ -1,5 +1,6 @@
 import { ContainerTabs } from '@/components/container-tabs'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { TimeModeToggle } from '@/components/time-mode-toggle'
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
         <span className="text-sm font-semibold">Log Viewer</span>
         <span className="text-xs text-muted-foreground">Docker container logs</span>
         <div className="flex-1" />
+        <TimeModeToggle />
         <ThemeToggle />
       </header>
       <div className="flex-1 min-h-0">

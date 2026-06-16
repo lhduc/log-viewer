@@ -3,6 +3,7 @@
 import type { HttpLogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle, getUriPath } from '@/lib/request-utils'
 import { formatTimestamp } from '@/lib/log-utils'
+import { useTimeMode } from '@/contexts/time-mode-context'
 import { CopyButton } from './copy-button'
 import { cn } from '@/lib/utils'
 
@@ -13,8 +14,9 @@ interface RequestRowProps {
 }
 
 export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
+  const { mode } = useTimeMode()
   const path = getUriPath(entry.uri)
-  const time = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts)
+  const time = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts, mode === 'utc', true)
   const requestId = entry.request_id as string | undefined
 
   return (

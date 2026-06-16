@@ -29,11 +29,15 @@ interface LogToolbarProps {
   methodFilter: Set<string>
   statusFilter: string
   search: string
+  timeFrom: string
+  timeTo: string
   filteredCount: number
   totalCount: number
   onToggleMethod: (method: string) => void
   onStatusFilter: (value: string) => void
   onSearch: (value: string) => void
+  onTimeFrom: (value: string) => void
+  onTimeTo: (value: string) => void
   onClear: () => void
   onClearFilters: () => void
 }
@@ -42,11 +46,15 @@ export function LogToolbar({
   methodFilter,
   statusFilter,
   search,
+  timeFrom,
+  timeTo,
   filteredCount,
   totalCount,
   onToggleMethod,
   onStatusFilter,
   onSearch,
+  onTimeFrom,
+  onTimeTo,
   onClear,
   onClearFilters,
 }: LogToolbarProps) {
@@ -57,7 +65,7 @@ export function LogToolbar({
     return () => clearTimeout(timer)
   }, [inputValue, onSearch])
 
-  const hasFilters = methodFilter.size > 0 || statusFilter !== 'all' || !!search
+  const hasFilters = methodFilter.size > 0 || statusFilter !== 'all' || !!search || !!timeFrom || !!timeTo
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40 flex-wrap">
@@ -116,6 +124,29 @@ export function LogToolbar({
         placeholder="Search URI, request ID, job ID…"
         className="h-6 text-xs w-60"
       />
+
+      <div className="w-px h-4 bg-border" />
+
+      {/* Time range */}
+      <div className="flex items-center gap-1">
+        <input
+          type="datetime-local"
+          step="1"
+          value={timeFrom}
+          onChange={e => onTimeFrom(e.target.value)}
+          className="h-6 text-[11px] font-mono bg-transparent border border-border rounded px-1.5 text-foreground cursor-pointer"
+          title="From"
+        />
+        <span className="text-muted-foreground text-[10px]">–</span>
+        <input
+          type="datetime-local"
+          step="1"
+          value={timeTo}
+          onChange={e => onTimeTo(e.target.value)}
+          className="h-6 text-[11px] font-mono bg-transparent border border-border rounded px-1.5 text-foreground cursor-pointer"
+          title="To"
+        />
+      </div>
 
       <div className="flex-1" />
 

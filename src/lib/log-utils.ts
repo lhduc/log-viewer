@@ -28,10 +28,17 @@ export function getMessage(entry: Record<string, unknown>): string {
   return String(entry.message ?? entry.msg ?? entry.body ?? JSON.stringify(entry))
 }
 
-export function formatTimestamp(ts: unknown): string {
+export function formatTimestamp(ts: unknown, utc = false, compact = false): string {
   if (!ts) return ''
   try {
-    return format(new Date(String(ts)), 'HH:mm:ss.SSS')
+    const d = new Date(String(ts))
+    if (isNaN(d.getTime())) return String(ts).slice(0, 12)
+    if (compact) {
+      return utc ? d.toISOString().slice(11, 19) : format(d, 'HH:mm:ss')
+    }
+    return utc
+      ? d.toISOString().slice(0, 19).replace('T', ' ')
+      : format(d, 'yyyy-MM-dd HH:mm:ss.SSS')
   } catch {
     return String(ts).slice(0, 12)
   }
