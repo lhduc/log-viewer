@@ -3,18 +3,19 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useLogStream } from '@/hooks/use-log-stream'
 import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
+import { isJobEntry } from '@/lib/job-utils'
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
 import { RequestDetail } from './request-detail'
-import type { HttpLogEntry } from '@/types/log'
+import type { HttpLogEntry, JobEntry } from '@/types/log'
 
 interface LogPanelProps {
-  containerId: string
+  containerIds: string[]
   active: boolean
 }
 
-export function LogPanel({ containerId, active }: LogPanelProps) {
-  const { logs, connected, error, clear } = useLogStream(containerId, active)
+export function LogPanel({ containerIds, active }: LogPanelProps) {
+  const { logs, connected, error, clear } = useLogStream(containerIds, active)
 
   const [methodFilter, setMethodFilter] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState('all')
@@ -22,6 +23,19 @@ export function LogPanel({ containerId, active }: LogPanelProps) {
   const [selected, setSelected] = useState<HttpLogEntry | null>(null)
 
   const httpEntries = useMemo(() => logs.filter(isHttpEntry), [logs])
+
+  // Index job entries by request_id for quick lookup in detail panel
+  const jobsByRequestId = useMemo(() => {
+    const map = new Map<string, JobEntry[]>()
+    for (const entry of logs) {
+      if (isJobEntry(entry) && entry.request_id) {
+        const list = map.get(entry.request_id) ?? []
+        list.push(entry)
+        map.set(entry.request_id, list)
+      }
+    }
+    return map
+  }, [logs])
 
   const filteredEntries = useMemo(() => {
     return httpEntries.filter(entry => {
@@ -46,9 +60,12 @@ export function LogPanel({ containerId, active }: LogPanelProps) {
     setSearch('')
   }, [])
 
+  const selectedJobs = selected?.request_id
+    ? (jobsByRequestId.get(selected.request_id) ?? [])
+    : []
+
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Connection status bar */}
       <div className="flex items-center gap-2 px-3 py-1 bg-muted border-b border-border text-xs shrink-0">
         <span className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
         <span className="text-muted-foreground">{connected ? 'Connected' : 'Connecting…'}</span>
@@ -68,9 +85,7 @@ export function LogPanel({ containerId, active }: LogPanelProps) {
         onClearFilters={clearFilters}
       />
 
-      {/* Main split layout */}
       <div className="flex flex-1 min-h-0">
-        {/* Request list — shrinks when detail panel is open */}
         <div className={`flex flex-col min-h-0 transition-all duration-200 ${selected ? 'w-[45%]' : 'flex-1'}`}>
           {filteredEntries.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
@@ -85,10 +100,13 @@ export function LogPanel({ containerId, active }: LogPanelProps) {
           )}
         </div>
 
-        {/* Detail panel — slides in from the right */}
         {selected && (
           <div className="flex-1 flex flex-col min-h-0 animate-in slide-in-from-right-4 duration-200">
-            <RequestDetail entry={selected} onClose={() => setSelected(null)} />
+            <RequestDetail
+              entry={selected}
+              onClose={() => setSelected(null)}
+              jobs={selectedJobs}
+            />
           </div>
         )}
       </div>

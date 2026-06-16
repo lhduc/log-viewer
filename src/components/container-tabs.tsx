@@ -1,14 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { ContainerInfo } from '@/types/log'
 import { LogPanel } from './log-panel'
 
 export function ContainerTabs() {
   const [containers, setContainers] = useState<ContainerInfo[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<string>('')
 
   const fetchContainers = async () => {
     try {
@@ -20,7 +18,6 @@ export function ContainerTabs() {
       }
       const data: ContainerInfo[] = await res.json()
       setContainers(data)
-      setActiveTab(prev => prev || (data.length > 0 ? data[0].id : ''))
     } catch {
       setError('Cannot reach server')
     }
@@ -54,30 +51,14 @@ export function ContainerTabs() {
     )
   }
 
-  return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-      <TabsList className="flex shrink-0 h-9 w-full bg-muted border-b border-border rounded-none justify-start px-2 gap-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
-        {containers.map(c => (
-          <TabsTrigger
-            key={c.id}
-            value={c.id}
-            className="shrink-0 text-xs h-7 px-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-          >
-            <span
-              className={`mr-1.5 h-1.5 w-1.5 rounded-full inline-block ${
-                c.state === 'running' ? 'bg-green-500' : 'bg-red-500'
-              }`}
-            />
-            {c.name}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+  const projectContainerIds = containers
+    .filter(c => !c.name.startsWith('share.'))
+    .map(c => c.id)
 
-      {containers.map(c => (
-        <TabsContent key={c.id} value={c.id} className="flex-1 mt-0 min-h-0">
-          <LogPanel containerId={c.id} active={activeTab === c.id} />
-        </TabsContent>
-      ))}
-    </Tabs>
+  return (
+    <LogPanel
+      containerIds={projectContainerIds}
+      active={true}
+    />
   )
 }

@@ -23,6 +23,18 @@ export interface HttpLogEntry extends LogEntry {
   seconds: number
   ip?: string
   request_id?: string
+  request?: unknown
   response?: unknown
+  msg?: string
+}
+
+export interface JobEntry extends LogEntry {
+  type: string
+  job_id: string
+  request_id?: string
+  seconds?: number
+  retry?: number
+  max_retry?: number
+  caller?: string
   msg?: string
 }
