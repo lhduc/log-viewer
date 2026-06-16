@@ -4,6 +4,8 @@ import type { HttpLogEntry, JobEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle } from '@/lib/request-utils'
 import { groupJobs, getJobDuration } from '@/lib/job-utils'
 import { formatTimestamp } from '@/lib/log-utils'
+import { JsonViewer } from './json-viewer'
+import { CopyButton } from './copy-button'
 import { cn } from '@/lib/utils'
 
 interface RequestDetailProps {
@@ -18,6 +20,18 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="font-mono break-all">{value}</dd>
     </>
+  )
+}
+
+// Section header with title and optional copy-the-JSON button
+function SectionHeader({ title, copyValue }: { title: string; copyValue?: unknown }) {
+  return (
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{title}</h3>
+      {copyValue !== undefined && (
+        <CopyButton value={typeof copyValue === 'string' ? copyValue : JSON.stringify(copyValue, null, 2)} />
+      )}
+    </div>
   )
 }
 
@@ -40,6 +54,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
           {method}
         </span>
         <span className="flex-1 font-mono text-sm text-foreground truncate" title={uri}>{uri}</span>
+        <CopyButton value={uri} />
         <button
           onClick={onClose}
           className="shrink-0 text-muted-foreground hover:text-foreground w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-base leading-none"
@@ -52,7 +67,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
       <div className="flex-1 overflow-auto">
         {/* Overview */}
         <section className="px-4 py-3 border-b border-border">
-          <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Overview</h3>
+          <SectionHeader title="Overview" />
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
             <DetailRow
               label="Status"
@@ -65,16 +80,24 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
             <DetailRow label="Duration" value={formatDuration(seconds)} />
             {ip && <DetailRow label="IP" value={ip} />}
             {time && <DetailRow label="Time" value={time} />}
-            {request_id && <DetailRow label="Request ID" value={request_id as string} />}
+            {request_id && (
+              <DetailRow
+                label="Request ID"
+                value={
+                  <span className="inline-flex items-center gap-2">
+                    {request_id as string}
+                    <CopyButton value={request_id as string} />
+                  </span>
+                }
+              />
+            )}
           </dl>
         </section>
 
         {/* Jobs triggered by this request */}
         {jobGroups.length > 0 && (
           <section className="px-4 py-3 border-b border-border">
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Jobs ({jobGroups.length})
-            </h3>
+            <SectionHeader title={`Jobs (${jobGroups.length})`} />
             <div className="flex flex-col gap-1.5">
               {jobGroups.map(group => {
                 const duration = getJobDuration(group)
@@ -108,30 +131,24 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
         {/* Request body */}
         {request !== undefined && (
           <section className="px-4 py-3 border-b border-border">
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Request</h3>
-            <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-all bg-muted/40 rounded p-3 leading-relaxed">
-              {JSON.stringify(request, null, 2)}
-            </pre>
+            <SectionHeader title="Request" copyValue={request} />
+            <JsonViewer data={request} />
           </section>
         )}
 
         {/* Extra fields */}
         {hasExtra && (
           <section className="px-4 py-3 border-b border-border">
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Extra</h3>
-            <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-all bg-muted/40 rounded p-3 leading-relaxed">
-              {JSON.stringify(extra, null, 2)}
-            </pre>
+            <SectionHeader title="Extra" copyValue={extra} />
+            <JsonViewer data={extra} />
           </section>
         )}
 
         {/* Response body */}
         {response !== undefined && (
           <section className="px-4 py-3">
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Response</h3>
-            <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-all bg-muted/40 rounded p-3 leading-relaxed">
-              {JSON.stringify(response, null, 2)}
-            </pre>
+            <SectionHeader title="Response" copyValue={response} />
+            <JsonViewer data={response} />
           </section>
         )}
       </div>
