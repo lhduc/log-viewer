@@ -116,7 +116,17 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
             </dl>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
               {time && <DetailRow label="Time" value={time} />}
-              {username && <DetailRow label="Username" value={username as string} />}
+              {username && (
+                <DetailRow
+                  label="Username"
+                  value={
+                    <span className="inline-flex items-center gap-2">
+                      {username as string}
+                      <CopyButton value={username as string} />
+                    </span>
+                  }
+                />
+              )}
               {request_id && (
                 <DetailRow
                   label="Request ID"
