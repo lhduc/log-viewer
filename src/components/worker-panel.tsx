@@ -102,7 +102,12 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
         </span>
         <div className="flex-1" />
         {username && (
-          <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">{username}</span>
+          <span className="flex items-center gap-1 shrink-0">
+            <span className="font-mono text-[10px] text-muted-foreground/60">{username}</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <CopyButton value={username} />
+            </span>
+          </span>
         )}
       </div>
     </div>
