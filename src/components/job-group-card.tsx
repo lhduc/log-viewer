@@ -44,6 +44,7 @@ function QueryRow({ entry }: { entry: LogEntry }) {
   const rows = typeof e.rows === 'number' ? e.rows : null
   const durationMs = typeof e.seconds === 'number' ? `${(e.seconds * 1000).toFixed(1)}ms`
     : typeof e.time_ms === 'number' ? `${e.time_ms}ms` : null
+  const error = typeof e.error === 'string' ? e.error : null
 
   // Try dialects: postgresql (double-quoted), mysql (backtick), sql (generic)
   let formatted = sql
@@ -70,6 +71,9 @@ function QueryRow({ entry }: { entry: LogEntry }) {
           )}
           {!funcName && !caller && (
             <span className="block font-mono text-xs text-muted-foreground truncate">{sql}</span>
+          )}
+          {error && (
+            <span className="block font-mono text-[10px] text-red-500 dark:text-red-400 truncate">{error}</span>
           )}
         </div>
         <div className="shrink-0 flex flex-col items-end gap-0.5">
