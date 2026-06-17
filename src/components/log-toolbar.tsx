@@ -43,6 +43,7 @@ interface LogToolbarProps {
   methodFilter: Set<string>
   statusFilter: string
   search: string
+  usernameFilter: string
   timeFrom: string
   timeTo: string
   filteredCount: number
@@ -50,6 +51,7 @@ interface LogToolbarProps {
   onToggleMethod: (method: string) => void
   onStatusFilter: (value: string) => void
   onSearch: (value: string) => void
+  onUsernameFilter: (value: string) => void
   onTimeFrom: (value: string) => void
   onTimeTo: (value: string) => void
   onClear: () => void
@@ -60,6 +62,7 @@ export function LogToolbar({
   methodFilter,
   statusFilter,
   search,
+  usernameFilter,
   timeFrom,
   timeTo,
   filteredCount,
@@ -67,12 +70,14 @@ export function LogToolbar({
   onToggleMethod,
   onStatusFilter,
   onSearch,
+  onUsernameFilter,
   onTimeFrom,
   onTimeTo,
   onClear,
   onClearFilters,
 }: LogToolbarProps) {
   const [inputValue, setInputValue] = useState(search)
+  const [usernameValue, setUsernameValue] = useState(usernameFilter)
   const { mode } = useTimeMode()
 
   useEffect(() => {
@@ -80,7 +85,15 @@ export function LogToolbar({
     return () => clearTimeout(timer)
   }, [inputValue, onSearch])
 
-  const hasFilters = methodFilter.size > 0 || statusFilter !== 'all' || !!search || !!timeFrom || !!timeTo
+  useEffect(() => {
+    const timer = setTimeout(() => onUsernameFilter(usernameValue), 300)
+    return () => clearTimeout(timer)
+  }, [usernameValue, onUsernameFilter])
+
+  // Sync external resets (e.g. Clear filters)
+  useEffect(() => { setUsernameValue(usernameFilter) }, [usernameFilter])
+
+  const hasFilters = methodFilter.size > 0 || statusFilter !== 'all' || !!search || !!usernameFilter || !!timeFrom || !!timeTo
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40 flex-wrap">
@@ -132,12 +145,20 @@ export function LogToolbar({
 
       <div className="w-px h-4 bg-border" />
 
-      {/* URI search */}
+      {/* URI / ID search */}
       <Input
         value={inputValue}
         onChange={e => setInputValue(e.target.value)}
-        placeholder="Search URI, username, request ID, job ID…"
-        className="h-6 text-xs w-60"
+        placeholder="Search URI, request ID, job ID…"
+        className="h-6 text-xs w-56"
+      />
+
+      {/* Username filter */}
+      <Input
+        value={usernameValue}
+        onChange={e => setUsernameValue(e.target.value)}
+        placeholder="Username"
+        className="h-6 text-xs w-28"
       />
 
       <div className="w-px h-4 bg-border" />

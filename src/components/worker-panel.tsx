@@ -121,6 +121,7 @@ interface WorkerPanelProps {
 export function WorkerPanel({ logs }: WorkerPanelProps) {
   const { mode } = useTimeMode()
   const [search, setSearch] = useState('')
+  const [usernameFilter, setUsernameFilter] = useState('')
   const [timeFrom, setTimeFrom] = useState('')
   const [timeTo, setTimeTo] = useState('')
   const [selected, setSelected] = useState<JobGroup | null>(null)
@@ -145,10 +146,19 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
             if (!e) return false
             const r = e as Record<string, unknown>
             const msg = typeof r.msg === 'string' ? r.msg.toLowerCase() : ''
-            const uname = typeof r.username === 'string' ? r.username.toLowerCase() : ''
-            return msg.includes(q) || uname.includes(q)
+            return msg.includes(q)
           })
           if (!matchId && !matchType && !matchMsg) return false
+        }
+        if (usernameFilter) {
+          const uq = usernameFilter.toLowerCase()
+          const matchUsername = [group.started, group.completed, ...group.updates].some(e => {
+            if (!e) return false
+            const r = e as Record<string, unknown>
+            const uname = typeof r.username === 'string' ? r.username.toLowerCase() : ''
+            return uname.includes(uq)
+          })
+          if (!matchUsername) return false
         }
         if (fromMs || toMs) {
           const entries = [group.started, ...group.updates, group.completed].filter(Boolean)
@@ -173,7 +183,7 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
         }
         return tsOf(b) - tsOf(a)
       })
-  }, [jobGroups, search, timeFrom, timeTo, mode])
+  }, [jobGroups, search, usernameFilter, timeFrom, timeTo, mode])
 
   const onDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -197,8 +207,8 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
     document.addEventListener('mouseup', onMouseUp)
   }, [])
 
-  const hasFilters = !!search || !!timeFrom || !!timeTo
-  const clearFilters = () => { setSearch(''); setTimeFrom(''); setTimeTo('') }
+  const hasFilters = !!search || !!usernameFilter || !!timeFrom || !!timeTo
+  const clearFilters = () => { setSearch(''); setUsernameFilter(''); setTimeFrom(''); setTimeTo('') }
 
   // Keep selected group in sync as new logs arrive
   const selectedGroup = selected
@@ -212,8 +222,14 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search job ID, type, username, message…"
-          className="h-6 text-xs w-60"
+          placeholder="Search job ID, type, message…"
+          className="h-6 text-xs w-52"
+        />
+        <Input
+          value={usernameFilter}
+          onChange={e => setUsernameFilter(e.target.value)}
+          placeholder="Username"
+          className="h-6 text-xs w-28"
         />
         <div className="w-px h-4 bg-border" />
         <div className="flex items-center gap-1">

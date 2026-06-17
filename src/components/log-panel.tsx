@@ -35,6 +35,7 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
   const [methodFilter, setMethodFilter] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [usernameFilter, setUsernameFilter] = useState('')
   const [timeFrom, setTimeFrom] = useState('')
   const [timeTo, setTimeTo] = useState('')
   const [selected, setSelected] = useState<HttpLogEntry | null>(null)
@@ -91,14 +92,14 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
         const passSearch = !search
           || entry.uri.toLowerCase().includes(q)
           || (reqId?.includes(q) ?? false)
-          || username.includes(q)
           || (entry.request_id ? jobMatchedRequestIds.has(entry.request_id) : false)
+        const passUsername = !usernameFilter || username.includes(usernameFilter.toLowerCase())
         const entryMs = entry.timestamp ? Date.parse(entry.timestamp) : 0
         // datetime-local value is always local time; append 'Z' to treat as UTC when in UTC mode
         const fromMs = timeFrom ? Date.parse(timeMode === 'utc' ? timeFrom + 'Z' : timeFrom) : 0
         const toMs = timeTo ? Date.parse(timeMode === 'utc' ? timeTo + 'Z' : timeTo) : 0
         const passTime = (!timeFrom || entryMs >= fromMs) && (!timeTo || entryMs <= toMs)
-        return passMethod && passStatus && passSearch && passTime
+        return passMethod && passStatus && passSearch && passUsername && passTime
       })
       // Sort chronologically — logs arrive interleaved from parallel container streams
       .sort((a, b) => {
@@ -106,7 +107,7 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
         const tb = b.timestamp ? Date.parse(b.timestamp) : 0
         return ta - tb || a._seq - b._seq
       })
-  }, [httpEntries, methodFilter, statusFilter, search, jobMatchedRequestIds, timeFrom, timeTo, timeMode])
+  }, [httpEntries, methodFilter, statusFilter, search, usernameFilter, jobMatchedRequestIds, timeFrom, timeTo, timeMode])
 
   const toggleMethod = useCallback((method: string) => {
     setMethodFilter(prev => {
@@ -120,6 +121,7 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
     setMethodFilter(new Set())
     setStatusFilter('all')
     setSearch('')
+    setUsernameFilter('')
     setTimeFrom('')
     setTimeTo('')
   }, [])
@@ -178,6 +180,7 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
         methodFilter={methodFilter}
         statusFilter={statusFilter}
         search={search}
+        usernameFilter={usernameFilter}
         timeFrom={timeFrom}
         timeTo={timeTo}
         filteredCount={filteredEntries.length}
@@ -185,6 +188,7 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
         onToggleMethod={toggleMethod}
         onStatusFilter={setStatusFilter}
         onSearch={setSearch}
+        onUsernameFilter={setUsernameFilter}
         onTimeFrom={setTimeFrom}
         onTimeTo={setTimeTo}
         onClear={clear}
