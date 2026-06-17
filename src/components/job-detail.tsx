@@ -45,7 +45,7 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
   const username = typeof startedE?.username === 'string' ? startedE.username : undefined
   const errorDetail = (completedE?.error as string | undefined) ?? (completedE?.exception as string | undefined)
 
-  const statusLabel = failed ? 'Failed' : isCompleted ? 'Completed' : isRunning ? 'Running' : 'Pending'
+  const statusLabel = failed ? 'Failed' : isCompleted ? 'Done' : isRunning ? 'Running' : 'Pending'
   const statusClass = failed
     ? 'text-red-500 bg-red-500/10 border-red-500/40'
     : isCompleted
