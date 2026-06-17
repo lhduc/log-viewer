@@ -57,15 +57,9 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
         )}
       </div>
 
-      {/* Secondary line: username · request_id */}
+      {/* Secondary line: request_id left, username right */}
       {(username || requestId) && (
         <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
-          {username && (
-            <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">{username}</span>
-          )}
-          {username && requestId && (
-            <span className="text-muted-foreground/30 text-[10px]">·</span>
-          )}
           {requestId && (
             <>
               <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
@@ -73,6 +67,10 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
                 <CopyButton value={requestId} />
               </span>
             </>
+          )}
+          <div className="flex-1" />
+          {username && (
+            <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">{username}</span>
           )}
         </div>
       )}

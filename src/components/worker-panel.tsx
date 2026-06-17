@@ -94,18 +94,16 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
         </span>
       </div>
 
-      {/* Secondary line: username · job_id */}
+      {/* Secondary line: job_id left, username right */}
       <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
-        {username && (
-          <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">{username}</span>
-        )}
-        {username && (
-          <span className="text-muted-foreground/30 text-[10px]">·</span>
-        )}
         <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{group.job_id}</span>
         <span className="opacity-0 group-hover:opacity-100 transition-opacity">
           <CopyButton value={group.job_id} />
         </span>
+        <div className="flex-1" />
+        {username && (
+          <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">{username}</span>
+        )}
       </div>
     </div>
   )
