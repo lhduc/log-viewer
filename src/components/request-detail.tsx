@@ -40,6 +40,7 @@ function SectionHeader({ title, copyValue }: { title: string; copyValue?: unknow
 export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   const { mode } = useTimeMode()
   const utc = mode === 'utc'
+  const [timelineOpen, setTimelineOpen] = useState(false)
   const time = formatTimestamp(entry.timestamp ?? (entry as Record<string, unknown>).time ?? (entry as Record<string, unknown>).ts, utc)
 
   const { _stream, _raw, _seq, method, uri, status, seconds, ip, request_id, username, request, response, timestamp, level, msg, message, time: _t, ts: _ts, ...extra } = entry as HttpLogEntry & Record<string, unknown>
@@ -144,19 +145,29 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
 
         {/* Unified chronological timeline */}
         {timeline.length > 0 && (
-          <section className="px-4 py-3 border-b border-border">
-            <SectionHeader title={`Timeline (${timeline.length})`} />
-            <div className="flex flex-col gap-2">
-              {timeline.map((item, i) =>
-                item.kind === 'job'
-                  ? <JobGroupCard key={item.group.job_id} group={item.group} />
-                  : (
-                    <div key={i} className="border border-border rounded overflow-hidden">
-                      <UpdateRow entry={item.entry} />
-                    </div>
-                  )
-              )}
-            </div>
+          <section className="border-b border-border">
+            <button
+              onClick={() => setTimelineOpen(o => !o)}
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+            >
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Timeline ({timeline.length})
+              </h3>
+              <span className="text-muted-foreground text-[10px]">{timelineOpen ? '▲' : '▼'}</span>
+            </button>
+            {timelineOpen && (
+              <div className="px-4 pb-3 flex flex-col gap-2">
+                {timeline.map((item, i) =>
+                  item.kind === 'job'
+                    ? <JobGroupCard key={item.group.job_id} group={item.group} />
+                    : (
+                      <div key={i} className="border border-border rounded overflow-hidden">
+                        <UpdateRow entry={item.entry} />
+                      </div>
+                    )
+                )}
+              </div>
+            )}
           </section>
         )}
 
