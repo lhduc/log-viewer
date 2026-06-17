@@ -8,6 +8,8 @@ import { formatTimestamp } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { JsonViewer } from './json-viewer'
 import { CopyButton } from './copy-button'
+import { SqlHighlight } from '@/lib/sql-highlight'
+import { format as formatSql } from 'sql-formatter'
 import { cn } from '@/lib/utils'
 
 export function callerFile(caller: unknown): string | null {
@@ -29,10 +31,76 @@ export function isFailed(job: LogEntry | undefined): boolean {
   return typeof e.error === 'string' || typeof e.exception === 'string'
 }
 
+function QueryRow({ entry }: { entry: LogEntry }) {
+  const [expanded, setExpanded] = useState(false)
+  const e = entry as Record<string, unknown>
+
+  const sql = typeof e.query === 'string' ? e.query
+    : typeof e.sql === 'string' ? e.sql
+    : typeof e.msg === 'string' ? e.msg : ''
+
+  const funcName = typeof e.func === 'string' ? e.func : null
+  const caller = callerFile(e.caller)
+  const rows = typeof e.rows === 'number' ? e.rows : null
+  const durationMs = typeof e.seconds === 'number' ? `${(e.seconds * 1000).toFixed(1)}ms`
+    : typeof e.time_ms === 'number' ? `${e.time_ms}ms` : null
+
+  // Try dialects: postgresql (double-quoted), mysql (backtick), sql (generic)
+  let formatted = sql
+  for (const language of ['postgresql', 'mysql', 'sql'] as const) {
+    try {
+      formatted = formatSql(sql, { language, tabWidth: 2, keywordCase: 'upper' })
+      break
+    } catch { /* try next */ }
+  }
+
+  return (
+    <div className="border-t border-border/40">
+      <div
+        className="flex items-start gap-2 px-2.5 py-1.5 cursor-pointer hover:bg-muted/30"
+        onClick={() => setExpanded(v => !v)}
+      >
+        <span className="shrink-0 font-semibold text-[10px] uppercase w-9 mt-px text-violet-500 dark:text-violet-400">SQL</span>
+        <div className="flex-1 min-w-0">
+          {funcName && (
+            <span className="block font-mono text-xs text-foreground truncate">{funcName}</span>
+          )}
+          {caller && (
+            <span className="block font-mono text-[10px] text-muted-foreground/60 truncate">{caller}</span>
+          )}
+          {!funcName && !caller && (
+            <span className="block font-mono text-xs text-muted-foreground truncate">{sql}</span>
+          )}
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-0.5">
+          {durationMs && <span className="text-muted-foreground/60 text-[10px] font-mono">{durationMs}</span>}
+          {rows !== null && <span className="text-muted-foreground/40 text-[10px] font-mono">{rows} rows</span>}
+        </div>
+      </div>
+      {expanded && (
+        <div className="px-2.5 pb-2 bg-muted/20">
+          <div className="flex items-center justify-end pb-1">
+            <CopyButton value={sql} />
+          </div>
+          <pre className="overflow-x-auto p-2 rounded border border-border bg-background text-xs leading-relaxed">
+            <SqlHighlight sql={formatted} />
+          </pre>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function UpdateRow({ entry }: { entry: LogEntry }) {
   const [expanded, setExpanded] = useState(false)
   const { mode } = useTimeMode()
   const e = entry as Record<string, unknown>
+
+  // Delegate query logs to the dedicated QueryRow
+  if (typeof e.type === 'string' && e.type === 'query') {
+    return <QueryRow entry={entry} />
+  }
+
   const msg = typeof e.msg === 'string' ? e.msg : ''
   const caller = callerFile(e.caller)
   const level = typeof e.level === 'string' ? e.level : ''
