@@ -61,7 +61,7 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
       {(username || requestId) && (
         <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
           {username && (
-            <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">@{username}</span>
+            <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">{username}</span>
           )}
           {username && requestId && (
             <span className="text-muted-foreground/30 text-[10px]">·</span>

@@ -97,7 +97,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
       {/* Secondary line: username · job_id */}
       <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
         {username && (
-          <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">@{username}</span>
+          <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">{username}</span>
         )}
         {username && (
           <span className="text-muted-foreground/30 text-[10px]">·</span>

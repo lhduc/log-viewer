@@ -85,7 +85,7 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
                 </span>
               }
             />
-            {username && <DetailRow label="Username" value={`@${username}`} />}
+            {username && <DetailRow label="Username" value={username} />}
             {duration && <DetailRow label="Duration" value={duration} />}
             {retry !== undefined && maxRetry !== undefined && (
               <DetailRow label="Retry" value={`${retry} / ${maxRetry}`} />

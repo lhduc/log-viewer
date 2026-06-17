@@ -113,7 +113,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
             <DetailRow label="Duration" value={formatDuration(seconds)} />
             {ip && <DetailRow label="IP" value={ip} />}
             {time && <DetailRow label="Time" value={time} />}
-            {username && <DetailRow label="Username" value={`@${username as string}`} />}
+            {username && <DetailRow label="Username" value={username as string} />}
             {request_id && (
               <DetailRow
                 label="Request ID"
