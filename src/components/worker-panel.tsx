@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { LogEntry } from '@/types/log'
 import type { JobGroup } from '@/lib/job-utils'
 import { groupJobs, hasJobId, getJobDuration } from '@/lib/job-utils'
@@ -128,6 +128,23 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
   const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
   const splitRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const pausedRef = useRef(false)
+  const [scrollPaused, setScrollPaused] = useState(false)
+
+  const onListScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    const shouldPause = distFromBottom > 80
+    pausedRef.current = shouldPause
+    setScrollPaused(shouldPause)
+  }
+
+  const resumeScroll = () => {
+    pausedRef.current = false
+    setScrollPaused(false)
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   const jobEntries = useMemo(() => logs.filter(hasJobId), [logs])
   const jobGroups = useMemo(() => groupJobs(jobEntries), [jobEntries])
@@ -181,9 +198,15 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
           const ts = (e as Record<string, unknown> | undefined)?.timestamp
           return typeof ts === 'string' ? Date.parse(ts) : 0
         }
-        return tsOf(b) - tsOf(a)
+        return tsOf(a) - tsOf(b)
       })
   }, [jobGroups, search, usernameFilter, timeFrom, timeTo, mode])
+
+  useEffect(() => {
+    if (!pausedRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+    }
+  }, [filteredGroups.length])
 
   const onDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -269,22 +292,36 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
       {/* Split: job list + detail panel */}
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         <div
-          className="flex flex-col min-h-0 overflow-auto"
+          className="relative min-h-0"
           style={{ width: selectedGroup ? `${100 - detailWidth}%` : '100%' }}
         >
-          {filteredGroups.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-              {logs.length === 0 ? 'Waiting for logs…' : 'No jobs match filters'}
-            </div>
-          ) : (
-            filteredGroups.map(group => (
-              <JobListRow
-                key={group.job_id}
-                group={group}
-                selected={selectedGroup?.job_id === group.job_id}
-                onClick={() => setSelected(prev => prev?.job_id === group.job_id ? null : group)}
-              />
-            ))
+          <div
+            className="absolute inset-0 overflow-y-auto flex flex-col"
+            onScroll={onListScroll}
+          >
+            {filteredGroups.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+                {logs.length === 0 ? 'Waiting for logs…' : 'No jobs match filters'}
+              </div>
+            ) : (
+              filteredGroups.map(group => (
+                <JobListRow
+                  key={group.job_id}
+                  group={group}
+                  selected={selectedGroup?.job_id === group.job_id}
+                  onClick={() => setSelected(prev => prev?.job_id === group.job_id ? null : group)}
+                />
+              ))
+            )}
+            <div ref={bottomRef} />
+          </div>
+          {scrollPaused && (
+            <button
+              onClick={resumeScroll}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-full shadow-lg z-10"
+            >
+              ↓ Resume auto-scroll
+            </button>
           )}
         </div>
 
