@@ -51,7 +51,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
   const username = typeof startedE?.username === 'string' ? startedE.username : undefined
 
   const statusKey = failed ? 'failed' : isCompleted ? 'completed' : isRunning ? 'running' : 'pending'
-  const statusLabel = failed ? 'FAILED' : isCompleted ? 'DONE' : isRunning ? 'RUN' : isPollOnly ? 'POLL' : 'PEND'
+  const statusLabel = failed ? 'FAILED' : isCompleted ? 'COMPLETED' : isRunning ? 'RUN' : isPollOnly ? 'POLL' : 'PEND'
 
   return (
     <div
