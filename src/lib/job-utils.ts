@@ -28,7 +28,10 @@ export function groupJobs(entries: LogEntry[]): JobGroup[] {
 
     const existing = map.get(jobId)
 
-    if (isJobEntry(entry)) {
+    const entryType = typeof e.type === 'string' ? e.type : ''
+
+    if (isJobEntry(entry) && entryType !== 'query') {
+      // Job lifecycle entry (started / completed)
       const group: JobGroup = existing ?? { job_id: jobId, type: entry.type, updates: [] }
       if (entry.msg?.startsWith('Job started:')) {
         map.set(jobId, { ...group, type: entry.type, started: entry })
@@ -36,10 +39,10 @@ export function groupJobs(entries: LogEntry[]): JobGroup[] {
         map.set(jobId, { ...group, type: entry.type, completed: entry })
       }
     } else {
-      // Debug/polling update — derive type from the message prefix
+      // Debug/polling updates and query entries always go into updates
       const msg = typeof e.msg === 'string' ? e.msg : ''
       const derivedType = msg.split(/[\s:]/)[0] ?? 'unknown'
-      const group: JobGroup = existing ?? { job_id: jobId, type: derivedType, updates: [] }
+      const group: JobGroup = existing ?? { job_id: jobId, type: entryType || derivedType, updates: [] }
       map.set(jobId, { ...group, updates: [...group.updates, entry] })
     }
   }
