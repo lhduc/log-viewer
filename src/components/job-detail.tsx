@@ -75,38 +75,42 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
         {/* Overview */}
         <section className="px-4 py-3 border-b border-border">
           <SectionHeader title="Overview" />
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
-            <DetailRow
-              label="Job ID"
-              value={
-                <span className="inline-flex items-center gap-2">
-                  {job_id}
-                  <CopyButton value={job_id} />
-                </span>
-              }
-            />
-            {username && (
+          <div className="grid grid-cols-2 gap-x-6 text-xs">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
               <DetailRow
-                label="Username"
+                label="Job ID"
                 value={
                   <span className="inline-flex items-center gap-2">
-                    {username}
-                    <CopyButton value={username} />
+                    {job_id}
+                    <CopyButton value={job_id} />
                   </span>
                 }
               />
-            )}
-            {duration && <DetailRow label="Duration" value={duration} />}
-            {retry !== undefined && maxRetry !== undefined && (
-              <DetailRow label="Retry" value={`${retry} / ${maxRetry}`} />
-            )}
-            {typeof startedE?.timestamp === 'string' && (
-              <DetailRow label="Started" value={formatTimestamp(startedE.timestamp, utc)} />
-            )}
-            {typeof completedE?.timestamp === 'string' && (
-              <DetailRow label="Completed" value={formatTimestamp(completedE.timestamp, utc)} />
-            )}
-          </dl>
+              {username && (
+                <DetailRow
+                  label="Username"
+                  value={
+                    <span className="inline-flex items-center gap-2">
+                      {username}
+                      <CopyButton value={username} />
+                    </span>
+                  }
+                />
+              )}
+              {duration && <DetailRow label="Duration" value={duration} />}
+              {retry !== undefined && maxRetry !== undefined && (
+                <DetailRow label="Retry" value={`${retry} / ${maxRetry}`} />
+              )}
+            </dl>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+              {typeof startedE?.timestamp === 'string' && (
+                <DetailRow label="Started" value={formatTimestamp(startedE.timestamp, utc)} />
+              )}
+              {typeof completedE?.timestamp === 'string' && (
+                <DetailRow label="Completed" value={formatTimestamp(completedE.timestamp, utc)} />
+              )}
+            </dl>
+          </div>
         </section>
 
         {/* Timeline */}
