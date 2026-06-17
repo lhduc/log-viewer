@@ -5,6 +5,8 @@ import type { ContainerInfo } from '@/types/log'
 import { LogPanel } from './log-panel'
 import { cn } from '@/lib/utils'
 
+type View = 'api' | 'scheduler'
+
 interface ProjectGroup {
   project: string
   containers: ContainerInfo[]
@@ -22,18 +24,11 @@ function groupByProject(containers: ContainerInfo[]): ProjectGroup[] {
     .sort((a, b) => a.project.localeCompare(b.project))
 }
 
-// null = all containers in project
-function useContainerSelection() {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const select = (id: string | null) => setSelectedId(id)
-  return { selectedId, select }
-}
-
 export function ContainerTabs() {
   const [containers, setContainers] = useState<ContainerInfo[]>([])
   const [error, setError] = useState<string | null>(null)
   const [activeProject, setActiveProject] = useState<string | null>(null)
-  const { selectedId, select } = useContainerSelection()
+  const [view, setView] = useState<View>('api')
 
   const fetchContainers = async () => {
     try {
@@ -47,7 +42,7 @@ export function ContainerTabs() {
       setContainers(data)
       setActiveProject(prev => {
         if (prev) return prev
-        const groups = groupByProject(data)
+        const groups = groupByProject(data.filter(c => c.project !== 'common'))
         return groups[0]?.project ?? null
       })
     } catch {
@@ -60,12 +55,6 @@ export function ContainerTabs() {
     const interval = setInterval(fetchContainers, 10_000)
     return () => clearInterval(interval)
   }, [])
-
-  // Reset container selection when switching projects
-  const switchProject = (project: string) => {
-    setActiveProject(project)
-    select(null)
-  }
 
   if (error) {
     return (
@@ -89,85 +78,72 @@ export function ContainerTabs() {
     )
   }
 
-  const groups = groupByProject(containers)
-  const activeGroup = groups.find(g => g.project === activeProject)
-  const activeIds = activeGroup
-    ? (selectedId ? [selectedId] : activeGroup.containers.map(c => c.id))
-    : []
-
-  const selectedContainer = activeGroup?.containers.find(c => c.id === selectedId)
-  const isWorker = !!selectedContainer && selectedContainer.name.toLowerCase().includes('worker')
+  // Exclude shared infrastructure project
+  const groups = groupByProject(containers.filter(c => c.project !== 'common'))
 
   return (
     <div className="flex flex-col h-full">
-      {/* Project tabs */}
-      <div className="shrink-0 flex items-end gap-0 px-3 border-b border-border bg-muted/60 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {groups.map(({ project, containers: cs }) => {
-          const active = project === activeProject
-          return (
-            <button
-              key={project}
-              onClick={() => switchProject(project)}
-              className={cn(
-                'flex items-center gap-2 px-4 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap',
-                active
-                  ? 'border-primary text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-              )}
-            >
-              <span className="font-semibold">{project}</span>
-              <span className={cn(
-                'text-[10px] font-mono px-1 rounded',
-                active ? 'text-muted-foreground' : 'text-muted-foreground/60'
-              )}>
-                {cs.length}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      {/* Top bar: project tabs left, API/Scheduler view switcher right */}
+      <div className="shrink-0 flex items-end border-b border-border bg-muted/60 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {/* Project tabs */}
+        <div className="flex items-end gap-0 px-3 overflow-x-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {groups.map(({ project, containers: cs }) => {
+            const active = project === activeProject
+            return (
+              <button
+                key={project}
+                onClick={() => setActiveProject(project)}
+                title={cs.map(c => c.name).join('\n')}
+                className={cn(
+                  'flex items-center gap-1.5 px-4 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap',
+                  active
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                )}
+              >
+                <span className="font-semibold">{project}</span>
+                <span className={cn('text-[10px] font-mono', active ? 'text-muted-foreground' : 'text-muted-foreground/50')}>
+                  {cs.length}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
-      {/* Container filter chips — only when project has multiple containers */}
-      {activeGroup && activeGroup.containers.length > 1 && (
-        <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 border-b border-border bg-muted/30 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <button
-            onClick={() => select(null)}
-            className={cn(
-              'px-2 py-0.5 rounded text-[11px] font-mono border transition-colors whitespace-nowrap',
-              selectedId === null
-                ? 'border-primary/60 bg-primary/10 text-foreground'
-                : 'border-border text-muted-foreground hover:text-foreground hover:border-border/80'
-            )}
-          >
-            All
-          </button>
-          {activeGroup.containers.map(c => (
+        {/* View switcher — right side */}
+        <div className="flex items-center gap-0 px-3 pb-0 shrink-0">
+          {(['api', 'scheduler'] as View[]).map(v => (
             <button
-              key={c.id}
-              onClick={() => select(selectedId === c.id ? null : c.id)}
+              key={v}
+              onClick={() => setView(v)}
               className={cn(
-                'px-2 py-0.5 rounded text-[11px] font-mono border transition-colors whitespace-nowrap',
-                selectedId === c.id
-                  ? 'border-primary/60 bg-primary/10 text-foreground'
-                  : 'border-border text-muted-foreground hover:text-foreground hover:border-border/80'
+                'px-3 py-2 text-[11px] font-medium border-b-2 transition-colors capitalize',
+                view === v
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               )}
             >
-              {c.name}
+              {v}
             </button>
           ))}
         </div>
-      )}
+      </div>
 
-      {/* Log panel — keyed by project so it remounts on project switch */}
+      {/* One LogPanel per project — all mounted, display:none for inactive to preserve streams */}
       <div className="flex-1 min-h-0">
-        {activeGroup && (
-          <LogPanel
-            key={`${activeProject}-${selectedId ?? 'all'}`}
-            containerIds={activeIds}
-            active={true}
-            isWorker={isWorker}
-          />
-        )}
+        {groups.map(({ project, containers: cs }) => (
+          <div
+            key={project}
+            className="h-full"
+            style={{ display: project === activeProject ? 'block' : 'none' }}
+          >
+            <LogPanel
+              containerIds={cs.map(c => c.id)}
+              active={project === activeProject}
+              view={view}
+            />
+          </div>
+        ))}
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import { useLogStream } from '@/hooks/use-log-stream'
 import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
 import { hasJobId } from '@/lib/job-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
+import { useConnectionStatus } from '@/contexts/connection-status-context'
 
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
@@ -19,12 +20,17 @@ const DETAIL_WIDTH_MAX = 80
 interface LogPanelProps {
   containerIds: string[]
   active: boolean
-  isWorker?: boolean
+  view?: 'api' | 'scheduler'
 }
 
-export function LogPanel({ containerIds, active, isWorker = false }: LogPanelProps) {
+export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) {
   const { logs, connected, error, clear } = useLogStream(containerIds, active)
   const { mode: timeMode } = useTimeMode()
+  const { setStatus } = useConnectionStatus()
+
+  useEffect(() => {
+    if (active) setStatus(connected, error)
+  }, [active, connected, error, setStatus])
 
   const [methodFilter, setMethodFilter] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState('all')
@@ -150,27 +156,21 @@ export function LogPanel({ containerIds, active, isWorker = false }: LogPanelPro
     ? (jobsByRequestId.get(selected.request_id) ?? [])
     : []
 
-  const statusBar = (
-    <div className="flex items-center gap-2 px-3 py-1 bg-muted border-b border-border text-xs shrink-0">
-      <span className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
-      <span className="text-muted-foreground">{connected ? 'Connected' : 'Connecting…'}</span>
-      {error && <span className="text-destructive ml-2">{error}</span>}
-    </div>
-  )
-
-  if (isWorker) {
+  if (view === 'scheduler') {
+    // Scheduler jobs: have job_id but no request_id (cron-triggered, not from HTTP requests)
+    const schedulerLogs = logs.filter(e => {
+      const r = e as Record<string, unknown>
+      return typeof r.job_id === 'string' && typeof r.request_id !== 'string'
+    })
     return (
       <div className="flex flex-col h-full bg-background">
-        {statusBar}
-        <WorkerPanel logs={logs} />
+        <WorkerPanel logs={schedulerLogs} />
       </div>
     )
   }
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {statusBar}
-
       <LogToolbar
         methodFilter={methodFilter}
         statusFilter={statusFilter}

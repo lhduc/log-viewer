@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { TimeModeProvider } from "@/contexts/time-mode-context";
+import { ConnectionStatusProvider } from "@/contexts/connection-status-context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,7 +34,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
           <TimeModeProvider>
-            {children}
+            <ConnectionStatusProvider>
+              {children}
+            </ConnectionStatusProvider>
           </TimeModeProvider>
         </ThemeProvider>
       </body>
