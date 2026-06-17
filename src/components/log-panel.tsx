@@ -86,9 +86,12 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
         const passMethod = methodFilter.size === 0 || methodFilter.has(entry.method.toUpperCase())
         const passStatus = statusFilter === 'all' || getStatusBucket(entry.status) === statusFilter
         const reqId = entry.request_id?.toLowerCase()
+        const username = typeof (entry as Record<string, unknown>).username === 'string'
+          ? ((entry as Record<string, unknown>).username as string).toLowerCase() : ''
         const passSearch = !search
           || entry.uri.toLowerCase().includes(q)
           || (reqId?.includes(q) ?? false)
+          || username.includes(q)
           || (entry.request_id ? jobMatchedRequestIds.has(entry.request_id) : false)
         const entryMs = entry.timestamp ? Date.parse(entry.timestamp) : 0
         // datetime-local value is always local time; append 'Z' to treat as UTC when in UTC mode

@@ -42,6 +42,7 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
   const completedE = completed as Record<string, unknown> | undefined
   const retry = typeof startedE?.retry === 'number' ? startedE.retry as number : undefined
   const maxRetry = typeof startedE?.max_retry === 'number' ? startedE.max_retry as number : undefined
+  const username = typeof startedE?.username === 'string' ? startedE.username : undefined
   const errorDetail = (completedE?.error as string | undefined) ?? (completedE?.exception as string | undefined)
 
   const statusLabel = failed ? 'Failed' : isCompleted ? 'Completed' : isRunning ? 'Running' : 'Pending'
@@ -84,6 +85,7 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
                 </span>
               }
             />
+            {username && <DetailRow label="Username" value={`@${username}`} />}
             {duration && <DetailRow label="Duration" value={duration} />}
             {retry !== undefined && maxRetry !== undefined && (
               <DetailRow label="Retry" value={`${retry} / ${maxRetry}`} />

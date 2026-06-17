@@ -48,6 +48,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
   const startedE = group.started as Record<string, unknown> | undefined
   const retry = typeof startedE?.retry === 'number' ? startedE.retry as number : undefined
   const maxRetry = typeof startedE?.max_retry === 'number' ? startedE.max_retry as number : undefined
+  const username = typeof startedE?.username === 'string' ? startedE.username : undefined
 
   const statusKey = failed ? 'failed' : isCompleted ? 'completed' : isRunning ? 'running' : 'pending'
   const statusLabel = failed ? 'FAILED' : isCompleted ? 'DONE' : isRunning ? 'RUN' : isPollOnly ? 'POLL' : 'PEND'
@@ -93,8 +94,14 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
         </span>
       </div>
 
-      {/* Secondary line: job ID with hover copy */}
+      {/* Secondary line: username · job_id */}
       <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
+        {username && (
+          <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">@{username}</span>
+        )}
+        {username && (
+          <span className="text-muted-foreground/30 text-[10px]">·</span>
+        )}
         <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{group.job_id}</span>
         <span className="opacity-0 group-hover:opacity-100 transition-opacity">
           <CopyButton value={group.job_id} />
@@ -133,9 +140,10 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
           const matchType = group.type.toLowerCase().includes(q)
           const matchMsg = [group.started, group.completed, ...group.updates].some(e => {
             if (!e) return false
-            const msg = typeof (e as Record<string, unknown>).msg === 'string'
-              ? ((e as Record<string, unknown>).msg as string).toLowerCase() : ''
-            return msg.includes(q)
+            const r = e as Record<string, unknown>
+            const msg = typeof r.msg === 'string' ? r.msg.toLowerCase() : ''
+            const uname = typeof r.username === 'string' ? r.username.toLowerCase() : ''
+            return msg.includes(q) || uname.includes(q)
           })
           if (!matchId && !matchType && !matchMsg) return false
         }
@@ -201,7 +209,7 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search job ID, type, message…"
+          placeholder="Search job ID, type, username, message…"
           className="h-6 text-xs w-60"
         />
         <div className="w-px h-4 bg-border" />

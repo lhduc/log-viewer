@@ -18,6 +18,7 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
   const path = getUriPath(entry.uri)
   const time = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts, mode === 'utc', true)
   const requestId = entry.request_id as string | undefined
+  const username = entry.username as string | undefined
 
   return (
     <div
@@ -56,13 +57,23 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
         )}
       </div>
 
-      {/* Request ID — subtle secondary line with copy button */}
-      {requestId && (
+      {/* Secondary line: username · request_id */}
+      {(username || requestId) && (
         <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
-          <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
-          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-            <CopyButton value={requestId} />
-          </span>
+          {username && (
+            <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">@{username}</span>
+          )}
+          {username && requestId && (
+            <span className="text-muted-foreground/30 text-[10px]">·</span>
+          )}
+          {requestId && (
+            <>
+              <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <CopyButton value={requestId} />
+              </span>
+            </>
+          )}
         </div>
       )}
     </div>

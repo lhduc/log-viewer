@@ -136,7 +136,7 @@ export function LogToolbar({
       <Input
         value={inputValue}
         onChange={e => setInputValue(e.target.value)}
-        placeholder="Search URI, request ID, job ID…"
+        placeholder="Search URI, username, request ID, job ID…"
         className="h-6 text-xs w-60"
       />
 

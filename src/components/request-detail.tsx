@@ -42,7 +42,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   const utc = mode === 'utc'
   const time = formatTimestamp(entry.timestamp ?? (entry as Record<string, unknown>).time ?? (entry as Record<string, unknown>).ts, utc)
 
-  const { _stream, _raw, _seq, method, uri, status, seconds, ip, request_id, request, response, timestamp, level, msg, message, time: _t, ts: _ts, ...extra } = entry as HttpLogEntry & Record<string, unknown>
+  const { _stream, _raw, _seq, method, uri, status, seconds, ip, request_id, username, request, response, timestamp, level, msg, message, time: _t, ts: _ts, ...extra } = entry as HttpLogEntry & Record<string, unknown>
   const hasExtra = Object.keys(extra).length > 0
 
   const jobEntries = jobs.filter(hasJobId)
@@ -113,6 +113,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
             <DetailRow label="Duration" value={formatDuration(seconds)} />
             {ip && <DetailRow label="IP" value={ip} />}
             {time && <DetailRow label="Time" value={time} />}
+            {username && <DetailRow label="Username" value={`@${username as string}`} />}
             {request_id && (
               <DetailRow
                 label="Request ID"
