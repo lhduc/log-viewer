@@ -95,6 +95,9 @@ export function ContainerTabs() {
     ? (selectedId ? [selectedId] : activeGroup.containers.map(c => c.id))
     : []
 
+  const selectedContainer = activeGroup?.containers.find(c => c.id === selectedId)
+  const isWorker = !!selectedContainer && selectedContainer.name.toLowerCase().includes('worker')
+
   return (
     <div className="flex flex-col h-full">
       {/* Project tabs */}
@@ -159,9 +162,10 @@ export function ContainerTabs() {
       <div className="flex-1 min-h-0">
         {activeGroup && (
           <LogPanel
-            key={activeProject}
+            key={`${activeProject}-${selectedId ?? 'all'}`}
             containerIds={activeIds}
             active={true}
+            isWorker={isWorker}
           />
         )}
       </div>

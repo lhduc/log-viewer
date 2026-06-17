@@ -9,6 +9,7 @@ import { useTimeMode } from '@/contexts/time-mode-context'
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
 import { RequestDetail } from './request-detail'
+import { WorkerPanel } from './worker-panel'
 import type { HttpLogEntry, LogEntry } from '@/types/log'
 
 const DETAIL_WIDTH_DEFAULT = 55  // percent
@@ -18,9 +19,10 @@ const DETAIL_WIDTH_MAX = 80
 interface LogPanelProps {
   containerIds: string[]
   active: boolean
+  isWorker?: boolean
 }
 
-export function LogPanel({ containerIds, active }: LogPanelProps) {
+export function LogPanel({ containerIds, active, isWorker = false }: LogPanelProps) {
   const { logs, connected, error, clear } = useLogStream(containerIds, active)
   const { mode: timeMode } = useTimeMode()
 
@@ -148,13 +150,26 @@ export function LogPanel({ containerIds, active }: LogPanelProps) {
     ? (jobsByRequestId.get(selected.request_id) ?? [])
     : []
 
+  const statusBar = (
+    <div className="flex items-center gap-2 px-3 py-1 bg-muted border-b border-border text-xs shrink-0">
+      <span className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+      <span className="text-muted-foreground">{connected ? 'Connected' : 'Connecting…'}</span>
+      {error && <span className="text-destructive ml-2">{error}</span>}
+    </div>
+  )
+
+  if (isWorker) {
+    return (
+      <div className="flex flex-col h-full bg-background">
+        {statusBar}
+        <WorkerPanel logs={logs} />
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="flex items-center gap-2 px-3 py-1 bg-muted border-b border-border text-xs shrink-0">
-        <span className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
-        <span className="text-muted-foreground">{connected ? 'Connected' : 'Connecting…'}</span>
-        {error && <span className="text-destructive ml-2">{error}</span>}
-      </div>
+      {statusBar}
 
       <LogToolbar
         methodFilter={methodFilter}
