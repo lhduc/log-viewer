@@ -80,14 +80,14 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0 min-w-0">
+      <div className="flex items-start gap-2 px-4 py-3 border-b border-border shrink-0 min-w-0">
         <span className={cn(
-          'shrink-0 px-1.5 py-0.5 rounded border font-mono font-bold text-[10px] uppercase',
+          'shrink-0 mt-0.5 px-1.5 py-0.5 rounded border font-mono font-bold text-[10px] uppercase',
           getMethodStyle(method)
         )}>
           {method}
         </span>
-        <span className="flex-1 font-mono text-sm text-foreground truncate" title={uri}>{uri}</span>
+        <span className="flex-1 font-mono text-sm text-foreground break-all">{uri}</span>
         <CopyButton value={uri} />
         <button
           onClick={onClose}
