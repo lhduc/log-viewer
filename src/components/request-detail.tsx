@@ -101,31 +101,35 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
         {/* Overview */}
         <section className="px-4 py-3 border-b border-border">
           <SectionHeader title="Overview" />
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
-            <DetailRow
-              label="Status"
-              value={
-                <span className={cn('px-1.5 py-0.5 rounded font-semibold text-[11px]', getStatusStyle(status))}>
-                  {status}
-                </span>
-              }
-            />
-            <DetailRow label="Duration" value={formatDuration(seconds)} />
-            {ip && <DetailRow label="IP" value={ip} />}
-            {time && <DetailRow label="Time" value={time} />}
-            {username && <DetailRow label="Username" value={username as string} />}
-            {request_id && (
+          <div className="grid grid-cols-2 gap-x-6 text-xs">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
               <DetailRow
-                label="Request ID"
+                label="Status"
                 value={
-                  <span className="inline-flex items-center gap-2">
-                    {request_id as string}
-                    <CopyButton value={request_id as string} />
+                  <span className={cn('px-1.5 py-0.5 rounded font-semibold text-[11px]', getStatusStyle(status))}>
+                    {status}
                   </span>
                 }
               />
-            )}
-          </dl>
+              <DetailRow label="Duration" value={formatDuration(seconds)} />
+              {ip && <DetailRow label="IP" value={ip} />}
+            </dl>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+              {time && <DetailRow label="Time" value={time} />}
+              {username && <DetailRow label="Username" value={username as string} />}
+              {request_id && (
+                <DetailRow
+                  label="Request ID"
+                  value={
+                    <span className="inline-flex items-center gap-2">
+                      {request_id as string}
+                      <CopyButton value={request_id as string} />
+                    </span>
+                  }
+                />
+              )}
+            </dl>
+          </div>
         </section>
 
         {/* Unified chronological timeline */}
