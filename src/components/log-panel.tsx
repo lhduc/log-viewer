@@ -209,7 +209,7 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
             <RequestList
               entries={filteredEntries}
               selectedSeq={selected?._seq ?? null}
-              onSelect={setSelected}
+              onSelect={entry => setSelected(prev => prev?._seq === entry._seq ? null : entry)}
             />
           )}
         </div>
