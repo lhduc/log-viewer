@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { K8sPod } from '@/lib/k8s-client'
 import type { K8sPodTarget } from '@/hooks/use-k8s-log-stream'
+import { isInfraService } from '@/lib/service-filter'
 import { useSource } from '@/contexts/source-context'
 import { useConnectionStatus } from '@/contexts/connection-status-context'
 import { useK8sLogStream } from '@/hooks/use-k8s-log-stream'
@@ -109,7 +110,7 @@ export function K8sContainerTabs() {
       setPods(data)
       setActiveService(prev => {
         if (prev) return prev
-        const groups = groupByService(data)
+        const groups = groupByService(data).filter(g => !isInfraService(g.service))
         return groups[0]?.service ?? null
       })
     } catch {
@@ -145,7 +146,7 @@ export function K8sContainerTabs() {
     )
   }
 
-  const groups = groupByService(pods)
+  const groups = groupByService(pods).filter(g => !isInfraService(g.service))
 
   return (
     <div className="flex flex-col h-full">

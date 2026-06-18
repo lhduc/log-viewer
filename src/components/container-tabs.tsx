@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { ContainerInfo } from '@/types/log'
+import { isInfraService } from '@/lib/service-filter'
 import { LogPanel } from './log-panel'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -43,7 +44,7 @@ export function ContainerTabs() {
       setContainers(data)
       setActiveProject(prev => {
         if (prev) return prev
-        const groups = groupByProject(data.filter(c => c.project !== 'common'))
+        const groups = groupByProject(data.filter(c => c.project !== 'common' && !isInfraService(c.project)))
         return groups[0]?.project ?? null
       })
     } catch {
@@ -79,8 +80,10 @@ export function ContainerTabs() {
     )
   }
 
-  // Exclude shared infrastructure project
-  const groups = groupByProject(containers.filter(c => c.project !== 'common'))
+  // Exclude shared infrastructure projects and known infra service names
+  const groups = groupByProject(
+    containers.filter(c => c.project !== 'common' && !isInfraService(c.project))
+  )
 
   return (
     <div className="flex flex-col h-full">
