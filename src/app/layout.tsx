@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { TimeModeProvider } from "@/contexts/time-mode-context";
 import { ConnectionStatusProvider } from "@/contexts/connection-status-context";
 import { SourceProvider } from "@/contexts/source-context";
+import { SettingsProvider } from "@/contexts/settings-context";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -31,13 +32,15 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
-          <SourceProvider>
-            <TimeModeProvider>
-              <ConnectionStatusProvider>
-                {children}
-              </ConnectionStatusProvider>
-            </TimeModeProvider>
-          </SourceProvider>
+          <SettingsProvider>
+            <SourceProvider>
+              <TimeModeProvider>
+                <ConnectionStatusProvider>
+                  {children}
+                </ConnectionStatusProvider>
+              </TimeModeProvider>
+            </SourceProvider>
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

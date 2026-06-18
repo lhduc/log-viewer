@@ -6,6 +6,7 @@ import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
 import { hasJobId } from '@/lib/job-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { useConnectionStatus } from '@/contexts/connection-status-context'
+import { useSettings } from '@/contexts/settings-context'
 
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
@@ -41,6 +42,7 @@ export function LogPanel({
 
   const { mode: timeMode } = useTimeMode()
   const { setStatus } = useConnectionStatus()
+  const { isExcluded } = useSettings()
 
   useEffect(() => {
     if (active && !external) setStatus(connected, error)
@@ -58,7 +60,10 @@ export function LogPanel({
   const splitRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
 
-  const httpEntries = useMemo(() => logs.filter(isHttpEntry), [logs])
+  const httpEntries = useMemo(
+    () => logs.filter(isHttpEntry).filter(e => !isExcluded(e.uri)),
+    [logs, isExcluded]
+  )
 
   const jobsByRequestId = useMemo(() => {
     const map = new Map<string, LogEntry[]>()
