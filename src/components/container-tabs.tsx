@@ -95,7 +95,7 @@ export function ContainerTabs() {
               <button
                 key={project}
                 onClick={() => setActiveProject(project)}
-                title={cs.filter(c => isProjectService(c.name)).map(c => c.name).join('\n')}
+                title={cs.filter(c => isProjectService(c.name)).map(c => c.name).sort().join('\n')}
                 className={cn(
                   'flex items-center px-4 h-full text-xs font-medium border-b-2 transition-colors whitespace-nowrap',
                   active
