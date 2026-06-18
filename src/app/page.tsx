@@ -16,6 +16,9 @@ export default function Home() {
       <div className="flex-1 min-h-0">
         <ContainerTabs />
       </div>
+      <footer className="shrink-0 flex items-center justify-center px-4 h-7 border-t border-border bg-muted text-[10px] text-muted-foreground font-mono">
+        Maintainer: Duc Le (lehongduc87@gmail.com)
+      </footer>
     </div>
   )
 }
