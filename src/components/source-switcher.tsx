@@ -122,36 +122,40 @@ export function SourceSwitcher() {
 
               {recentConnections.length > 0 && (
                 <div className="mt-1">
-                  <p className="text-xs text-muted-foreground mb-1.5 px-0.5">Connection history</p>
-                  <div className="flex flex-col gap-1">
-                    {recentConnections.map(conn => (
-                      <div
-                        key={`${conn.context}/${conn.namespace}`}
-                        className={cn(
-                          'flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-colors hover:bg-muted group',
-                          mode === 'k8s' && k8s?.context === conn.context && k8s?.namespace === conn.namespace
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border'
-                        )}
-                      >
-                        <button
-                          className="flex-1 flex flex-col items-start min-w-0"
-                          onClick={() => { switchToK8s(conn); setOpen(false) }}
+                  <div className="border-t border-border mb-3" />
+                  <p className="text-sm font-semibold text-foreground mb-2">Connection History</p>
+                  <div className="flex flex-col gap-2">
+                    {recentConnections.map(conn => {
+                      const isActive = mode === 'k8s' && k8s?.context === conn.context && k8s?.namespace === conn.namespace
+                      return (
+                        <div
+                          key={`${conn.context}/${conn.namespace}`}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors hover:bg-muted',
+                            isActive ? 'border-primary bg-primary/5' : 'border-border'
+                          )}
                         >
-                          <span className="text-sm font-medium truncate w-full">
-                            {conn.context.split('/').pop()}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground">{conn.namespace}</span>
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); removeFromHistory(conn) }}
-                          className="shrink-0 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-                          aria-label="Remove"
-                        >
-                          <X size={13} />
-                        </button>
-                      </div>
-                    ))}
+                          <button
+                            className="flex-1 flex flex-col items-start min-w-0 text-left"
+                            onClick={() => { switchToK8s(conn); setOpen(false) }}
+                          >
+                            <span className="text-sm font-semibold text-foreground truncate w-full">
+                              {conn.namespace}
+                            </span>
+                            <span className="text-xs text-muted-foreground truncate w-full mt-0.5">
+                              {conn.context.split('/').pop()}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeFromHistory(conn) }}
+                            className="shrink-0 h-7 w-7 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors"
+                            aria-label="Remove"
+                          >
+                            <X size={13} />
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
