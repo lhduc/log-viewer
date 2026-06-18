@@ -44,7 +44,7 @@ export function ContainerTabs() {
       setContainers(data)
       setActiveProject(prev => {
         if (prev) return prev
-        const groups = groupByProject(data.filter(c => c.project !== 'common' && isProjectService(c.project)))
+        const groups = groupByProject(data.filter(c => c.project !== 'common'))
         return groups[0]?.project ?? null
       })
     } catch {
@@ -80,10 +80,8 @@ export function ContainerTabs() {
     )
   }
 
-  // Exclude shared infrastructure projects and known infra service names
-  const groups = groupByProject(
-    containers.filter(c => c.project !== 'common' && isProjectService(c.project))
-  )
+  // Group by project, then only stream api/worker containers within each project
+  const groups = groupByProject(containers.filter(c => c.project !== 'common'))
 
   return (
     <div className="flex flex-col h-full">
@@ -136,7 +134,7 @@ export function ContainerTabs() {
             style={{ display: project === activeProject ? 'block' : 'none' }}
           >
             <LogPanel
-              containerIds={cs.map(c => c.id)}
+              containerIds={cs.filter(c => isProjectService(c.name)).map(c => c.id)}
               active={project === activeProject}
               view={view}
             />
