@@ -8,6 +8,7 @@ import { formatTimestamp } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { DateTimeRangePicker } from '@/components/ui/date-time-range-picker'
 import { isFailed } from './job-group-card'
 import { JobDetail } from './job-detail'
 import { CopyButton } from './copy-button'
@@ -57,37 +58,37 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
     <div
       onClick={onClick}
       className={cn(
-        'group px-4 py-2 border-b border-border/50 cursor-pointer text-xs hover:bg-muted/50 transition-colors select-none',
+        'group px-4 py-2 border-b border-border/50 cursor-pointer text-xs hover:bg-muted transition-colors select-none',
         selected && 'bg-muted border-l-2 border-l-primary'
       )}
     >
       {/* Main row: status badge, type, badges, duration, time */}
       <div className="flex items-center gap-3">
         <span className={cn(
-          'shrink-0 w-14 text-center px-1.5 py-0.5 rounded border font-mono font-bold text-[10px]',
+          'shrink-0 w-14 text-center px-1.5 py-0.5 rounded border font-bold text-[10px]',
           STATUS_BADGE[statusKey]
         )}>
           {statusLabel}
         </span>
 
-        <span className="flex-1 font-mono text-foreground truncate">{group.type}</span>
+        <span className="flex-1 text-foreground truncate">{group.type}</span>
 
         {group.updates.length > 0 && (
-          <span className="shrink-0 px-1.5 py-0.5 rounded border font-mono text-[10px] text-sky-600 border-sky-300 bg-sky-50 dark:text-sky-300 dark:border-sky-600 dark:bg-sky-950">
+          <span className="shrink-0 px-1.5 py-0.5 rounded border text-[10px] text-sky-600 border-sky-300 bg-sky-50 dark:text-sky-300 dark:border-sky-600 dark:bg-sky-950">
             ↻{group.updates.length}
           </span>
         )}
         {retry !== undefined && maxRetry !== undefined && (
-          <span className="shrink-0 px-1.5 py-0.5 rounded border font-mono text-[10px] text-purple-600 border-purple-400 bg-purple-100 dark:text-purple-300 dark:border-purple-500 dark:bg-purple-950">
+          <span className="shrink-0 px-1.5 py-0.5 rounded border text-[10px] text-purple-600 border-purple-400 bg-purple-100 dark:text-purple-300 dark:border-purple-500 dark:bg-purple-950">
             {retry}/{maxRetry}
           </span>
         )}
 
-        <span className="shrink-0 text-muted-foreground w-12 text-right font-mono">
+        <span className="shrink-0 text-muted-foreground w-12 text-right">
           {duration ?? ''}
         </span>
 
-        <span className="shrink-0 text-muted-foreground w-20 text-right font-mono hidden sm:block">
+        <span className="shrink-0 text-muted-foreground w-20 text-right hidden sm:block">
           {typeof startedE?.timestamp === 'string'
             ? formatTimestamp(startedE.timestamp, utc, true)
             : ''}
@@ -96,7 +97,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
 
       {/* Secondary line: job_id left, username right */}
       <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
-        <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{group.job_id}</span>
+        <span className="text-[10px] text-muted-foreground/60 truncate">{group.job_id}</span>
         <span className="opacity-0 group-hover:opacity-100 transition-opacity">
           <CopyButton value={group.job_id} />
         </span>
@@ -106,7 +107,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
             <span className="opacity-0 group-hover:opacity-100 transition-opacity">
               <CopyButton value={username} />
             </span>
-            <span className="font-mono text-[10px] text-muted-foreground/60">{username}</span>
+            <span className="text-[10px] text-muted-foreground/60">{username}</span>
           </span>
         )}
       </div>
@@ -241,7 +242,7 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40 flex-wrap shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted flex-wrap shrink-0">
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -264,20 +265,19 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
                 setTimeFrom(toDatetimeLocal(new Date(now.getTime() - range.minutes * 60000), mode === 'utc'))
                 setTimeTo('')
               }}
-              className="px-1.5 py-0.5 rounded border border-border font-mono text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="px-1.5 py-0.5 rounded border border-border text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               {range.label}
             </button>
           ))}
         </div>
         <div className="w-px h-4 bg-border" />
-        <div className="flex items-center gap-1">
-          <input type="datetime-local" step="1" value={timeFrom} onChange={e => setTimeFrom(e.target.value)}
-            className="h-6 text-[11px] font-mono bg-transparent border border-border rounded px-1.5 text-foreground cursor-pointer" />
-          <span className="text-muted-foreground text-[10px]">–</span>
-          <input type="datetime-local" step="1" value={timeTo} onChange={e => setTimeTo(e.target.value)}
-            className="h-6 text-[11px] font-mono bg-transparent border border-border rounded px-1.5 text-foreground cursor-pointer" />
-        </div>
+        <DateTimeRangePicker
+          valueFrom={timeFrom}
+          valueTo={timeTo}
+          onChangeFrom={setTimeFrom}
+          onChangeTo={setTimeTo}
+        />
         <div className="flex-1" />
         <span className="text-[10px] text-muted-foreground shrink-0">
           {filteredGroups.length} / {jobGroups.length} jobs
@@ -332,7 +332,7 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
               className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40 transition-colors"
             />
             <div
-              className="flex flex-col min-h-0 overflow-hidden bg-muted/30 animate-in slide-in-from-right-4 duration-200"
+              className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-right-4 duration-200"
               style={{ width: `${detailWidth}%` }}
             >
               <JobDetail group={selectedGroup} onClose={() => setSelected(null)} />

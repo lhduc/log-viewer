@@ -24,34 +24,34 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
     <div
       onClick={onClick}
       className={cn(
-        'group px-4 py-2 border-b border-border/50 cursor-pointer text-xs hover:bg-muted/50 transition-colors select-none',
+        'group px-4 py-2 border-b border-border/50 cursor-pointer text-xs hover:bg-muted transition-colors select-none',
         selected && 'bg-muted border-l-2 border-l-primary'
       )}
     >
       {/* Main row: method, uri, status, duration, time */}
       <div className="flex items-center gap-3">
         <span className={cn(
-          'shrink-0 w-14 text-center px-1.5 py-0.5 rounded border font-mono font-bold text-[10px] uppercase',
+          'shrink-0 w-14 text-center px-1.5 py-0.5 rounded border font-bold text-[10px] uppercase',
           getMethodStyle(entry.method)
         )}>
           {entry.method}
         </span>
 
-        <span className="flex-1 font-mono text-foreground truncate">{path}</span>
+        <span className="flex-1 text-foreground truncate">{path}</span>
 
         <span className={cn(
-          'shrink-0 px-1.5 py-0.5 rounded font-mono font-semibold text-[11px]',
+          'shrink-0 px-1.5 py-0.5 rounded font-semibold text-[11px]',
           getStatusStyle(entry.status)
         )}>
           {entry.status}
         </span>
 
-        <span className="shrink-0 text-muted-foreground w-12 text-right font-mono">
+        <span className="shrink-0 text-muted-foreground w-12 text-right">
           {formatDuration(entry.seconds)}
         </span>
 
         {time && (
-          <span className="shrink-0 text-muted-foreground w-20 text-right font-mono hidden sm:block">
+          <span className="shrink-0 text-muted-foreground w-20 text-right hidden sm:block">
             {time}
           </span>
         )}
@@ -62,7 +62,7 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
         <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
           {requestId && (
             <>
-              <span className="font-mono text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
+              <span className="text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
               <span className="opacity-0 group-hover:opacity-100 transition-opacity">
                 <CopyButton value={requestId} />
               </span>
@@ -74,7 +74,7 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
               <span className="opacity-0 group-hover:opacity-100 transition-opacity">
                 <CopyButton value={username} />
               </span>
-              <span className="font-mono text-[10px] text-muted-foreground/60">{username}</span>
+              <span className="text-[10px] text-muted-foreground/60">{username}</span>
             </span>
           )}
         </div>

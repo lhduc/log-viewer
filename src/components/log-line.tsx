@@ -23,8 +23,8 @@ export function LogLine({ entry, rawMode, style }: LogLineProps) {
 
   if (rawMode) {
     return (
-      <div style={style} className="px-3 py-0.5 font-mono text-xs text-foreground border-b border-border/50">
-        <pre className="whitespace-pre-wrap break-all">{JSON.stringify(rest, null, 2)}</pre>
+      <div style={style} className="px-3 py-0.5 text-xs text-foreground border-b border-border/50">
+        <pre className="font-mono whitespace-pre-wrap break-all">{JSON.stringify(rest, null, 2)}</pre>
       </div>
     )
   }
@@ -33,7 +33,7 @@ export function LogLine({ entry, rawMode, style }: LogLineProps) {
     <div
       style={style}
       className={cn(
-        'px-3 py-0.5 font-mono text-xs border-b border-border/50 cursor-pointer hover:bg-muted/50',
+        'px-3 py-0.5 text-xs border-b border-border/50 cursor-pointer hover:bg-muted',
         _stream === 'stderr' && 'border-l-2 border-l-red-400'
       )}
       onClick={() => setExpanded(v => !v)}
@@ -50,7 +50,7 @@ export function LogLine({ entry, rawMode, style }: LogLineProps) {
         <span className="truncate text-foreground">{message}</span>
       </div>
       {expanded && (
-        <pre className="mt-1 text-muted-foreground whitespace-pre-wrap break-all bg-muted/50 rounded p-2">
+        <pre className="mt-1 font-mono text-muted-foreground whitespace-pre-wrap break-all bg-muted rounded p-2">
           {JSON.stringify(rest, null, 2)}
         </pre>
       )}

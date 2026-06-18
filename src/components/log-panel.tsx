@@ -225,7 +225,7 @@ export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) 
 
             {/* Detail panel with distinct background */}
             <div
-              className="flex flex-col min-h-0 overflow-hidden bg-muted/30 animate-in slide-in-from-right-4 duration-200"
+              className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-right-4 duration-200"
               style={{ width: `${detailWidth}%` }}
             >
               <RequestDetail

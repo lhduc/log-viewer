@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import type { HttpLogEntry, LogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle } from '@/lib/request-utils'
 import { groupJobs, getJobDuration, hasJobId, type JobGroup } from '@/lib/job-utils'
@@ -20,8 +20,8 @@ interface RequestDetailProps {
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <>
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-mono break-all">{value}</dd>
+      <dt className="text-muted-foreground whitespace-nowrap">{label}</dt>
+      <dd className="break-all">{value}</dd>
     </>
   )
 }
@@ -80,14 +80,14 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-start gap-2 px-4 py-3 border-b border-border shrink-0 min-w-0">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0 min-w-0">
         <span className={cn(
-          'shrink-0 mt-0.5 px-1.5 py-0.5 rounded border font-mono font-bold text-[10px] uppercase',
+          'shrink-0 px-1.5 py-0.5 rounded border font-bold text-[10px] uppercase',
           getMethodStyle(method)
         )}>
           {method}
         </span>
-        <span className="flex-1 font-mono text-sm text-foreground break-all">{uri}</span>
+        <span className="flex-1 text-sm text-foreground break-all">{uri}</span>
         <CopyButton value={uri} />
         <button
           onClick={onClose}
@@ -102,45 +102,39 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
         {/* Overview */}
         <section className="px-4 py-3 border-b border-border">
           <SectionHeader title="Overview" />
-          <div className="grid grid-cols-2 gap-x-6 text-xs">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-              <DetailRow
-                label="Status"
-                value={
-                  <span className={cn('px-1.5 py-0.5 rounded font-semibold text-[11px]', getStatusStyle(status))}>
-                    {status}
-                  </span>
-                }
-              />
-              <DetailRow label="Duration" value={formatDuration(seconds)} />
-              {ip && <DetailRow label="IP" value={ip} />}
-            </dl>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-              {time && <DetailRow label="Time" value={time} />}
-              {username && (
-                <DetailRow
-                  label="Username"
-                  value={
-                    <span className="inline-flex items-center gap-2">
-                      {username as string}
-                      <CopyButton value={username as string} />
-                    </span>
-                  }
-                />
-              )}
-              {request_id && (
-                <DetailRow
-                  label="Request ID"
-                  value={
-                    <span className="inline-flex items-center gap-2">
-                      {request_id as string}
-                      <CopyButton value={request_id as string} />
-                    </span>
-                  }
-                />
-              )}
-            </dl>
-          </div>
+          {(() => {
+            const leftFields: { label: string; value: React.ReactNode }[] = [
+              { label: 'Status', value: <span className={cn('px-1.5 py-0.5 rounded font-semibold text-[11px]', getStatusStyle(status))}>{status}</span> },
+              { label: 'Duration', value: formatDuration(seconds) },
+              ...(ip ? [{ label: 'IP', value: ip }] : []),
+            ]
+            const rightFields: { label: string; value: React.ReactNode }[] = [
+              ...(time ? [{ label: 'Time', value: time }] : []),
+              ...(username ? [{ label: 'Username', value: <span className="inline-flex items-center gap-2">{username as string}<CopyButton value={username as string} /></span> }] : []),
+              ...(request_id ? [{ label: 'Request ID', value: <span className="inline-flex items-center gap-2">{request_id as string}<CopyButton value={request_id as string} /></span> }] : []),
+            ]
+            const rows = Math.max(leftFields.length, rightFields.length)
+            return (
+              <dl className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-1.5 text-xs items-center [grid-auto-rows:minmax(1.25rem,auto)]">
+                {Array.from({ length: rows }).map((_, i) => {
+                  const left = leftFields[i]
+                  const right = rightFields[i]
+                  return (
+                    <Fragment key={i}>
+                      {left
+                        ? <><dt className="text-muted-foreground whitespace-nowrap">{left.label}</dt><dd>{left.value}</dd></>
+                        : <><dt /><dd /></>
+                      }
+                      {right
+                        ? <><dt className="text-muted-foreground whitespace-nowrap pl-4">{right.label}</dt><dd>{right.value}</dd></>
+                        : <><dt /><dd /></>
+                      }
+                    </Fragment>
+                  )
+                })}
+              </dl>
+            )
+          })()}
         </section>
 
         {/* Unified chronological timeline */}
@@ -148,7 +142,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
           <section className="border-b border-border">
             <button
               onClick={() => setTimelineOpen(o => !o)}
-              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted transition-colors"
             >
               <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Timeline ({timeline.length})
@@ -173,22 +167,37 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
 
         {request !== undefined && (
           <section className="px-4 py-3 border-b border-border">
-            <SectionHeader title="Request" copyValue={request} />
-            <JsonViewer data={request} />
+            <SectionHeader title="Request" />
+            <div className="relative">
+              <JsonViewer data={request} />
+              <div className="absolute top-1.5 right-1.5">
+                <CopyButton value={typeof request === 'string' ? request : JSON.stringify(request, null, 2)} className="bg-muted hover:bg-accent" />
+              </div>
+            </div>
           </section>
         )}
 
         {hasExtra && (
           <section className="px-4 py-3 border-b border-border">
-            <SectionHeader title="Extra" copyValue={extra} />
-            <JsonViewer data={extra} />
+            <SectionHeader title="Extra" />
+            <div className="relative">
+              <JsonViewer data={extra} />
+              <div className="absolute top-1.5 right-1.5">
+                <CopyButton value={JSON.stringify(extra, null, 2)} className="bg-muted hover:bg-accent" />
+              </div>
+            </div>
           </section>
         )}
 
         {response !== undefined && (
           <section className="px-4 py-3">
-            <SectionHeader title="Response" copyValue={response} />
-            <JsonViewer data={response} />
+            <SectionHeader title="Response" />
+            <div className="relative">
+              <JsonViewer data={response} />
+              <div className="absolute top-1.5 right-1.5">
+                <CopyButton value={typeof response === 'string' ? response : JSON.stringify(response, null, 2)} className="bg-muted hover:bg-accent" />
+              </div>
+            </div>
           </section>
         )}
       </div>

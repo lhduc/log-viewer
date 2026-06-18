@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { DateTimeRangePicker } from '@/components/ui/date-time-range-picker'
 import { METHOD_STYLES, STATUS_STYLES } from '@/lib/request-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { cn } from '@/lib/utils'
@@ -96,7 +98,7 @@ export function LogToolbar({
   const hasFilters = methodFilter.size > 0 || statusFilter !== 'all' || !!search || !!usernameFilter || !!timeFrom || !!timeTo
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40 flex-wrap">
+    <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted flex-wrap">
       {/* Method chips */}
       <div className="flex items-center gap-1">
         {METHODS.map(method => {
@@ -108,7 +110,7 @@ export function LogToolbar({
               variant="outline"
               onClick={() => onToggleMethod(method)}
               className={cn(
-                'cursor-pointer font-mono text-[10px] px-1.5 py-0 h-5 select-none transition-colors',
+                'cursor-pointer text-[10px] px-1.5 py-0 h-5 select-none transition-colors',
                 s.base,
                 active ? s.active : 'opacity-50'
               )}
@@ -132,7 +134,7 @@ export function LogToolbar({
               variant="outline"
               onClick={() => onStatusFilter(active ? 'all' : bucket)}
               className={cn(
-                'cursor-pointer font-mono text-[10px] px-1.5 py-0 h-5 select-none transition-colors',
+                'cursor-pointer text-[10px] px-1.5 py-0 h-5 select-none transition-colors',
                 s.base,
                 active ? s.active : 'opacity-50'
               )}
@@ -146,12 +148,15 @@ export function LogToolbar({
       <div className="w-px h-4 bg-border" />
 
       {/* URI / ID search */}
-      <Input
-        value={inputValue}
-        onChange={e => setInputValue(e.target.value)}
-        placeholder="Search URI, request ID, job ID…"
-        className="h-6 text-xs w-56"
-      />
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+        <Input
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          placeholder="Search URI, request ID, job ID…"
+          className="h-6 text-xs w-56 pl-6"
+        />
+      </div>
 
       {/* Username filter */}
       <Input
@@ -175,7 +180,7 @@ export function LogToolbar({
               onTimeFrom(toDatetimeLocal(from, mode === 'utc'))
               onTimeTo('')
             }}
-            className="cursor-pointer font-mono text-[10px] px-1.5 py-0 h-5 select-none text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="cursor-pointer text-[10px] px-1.5 py-0 h-5 select-none text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             {range.label}
           </Badge>
@@ -185,25 +190,12 @@ export function LogToolbar({
       <div className="w-px h-4 bg-border" />
 
       {/* Time range */}
-      <div className="flex items-center gap-1">
-        <input
-          type="datetime-local"
-          step="1"
-          value={timeFrom}
-          onChange={e => onTimeFrom(e.target.value)}
-          className="h-6 text-[11px] font-mono bg-transparent border border-border rounded px-1.5 text-foreground cursor-pointer"
-          title="From"
-        />
-        <span className="text-muted-foreground text-[10px]">–</span>
-        <input
-          type="datetime-local"
-          step="1"
-          value={timeTo}
-          onChange={e => onTimeTo(e.target.value)}
-          className="h-6 text-[11px] font-mono bg-transparent border border-border rounded px-1.5 text-foreground cursor-pointer"
-          title="To"
-        />
-      </div>
+      <DateTimeRangePicker
+        valueFrom={timeFrom}
+        valueTo={timeTo}
+        onChangeFrom={onTimeFrom}
+        onChangeTo={onTimeTo}
+      />
 
       <div className="flex-1" />
 

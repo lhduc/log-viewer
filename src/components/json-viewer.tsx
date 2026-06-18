@@ -67,7 +67,7 @@ export function JsonViewer({ data }: JsonViewerProps) {
   const lines = text.split('\n')
 
   return (
-    <pre className="text-xs font-mono whitespace-pre-wrap break-all bg-muted/40 rounded p-3 leading-relaxed overflow-x-auto">
+    <pre className="text-xs font-mono whitespace-pre-wrap break-all bg-muted rounded p-3 leading-relaxed overflow-x-auto">
       {lines.map((line, i) => highlightLine(line, i))}
     </pre>
   )

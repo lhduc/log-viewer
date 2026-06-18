@@ -42,3 +42,5 @@ next-env.d.ts
 
 # context-pilot local data
 .context-pilot/
+docs/
+plans/

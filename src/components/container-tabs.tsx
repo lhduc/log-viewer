@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { ContainerInfo } from '@/types/log'
 import { LogPanel } from './log-panel'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 type View = 'api' | 'scheduler'
@@ -84,9 +85,9 @@ export function ContainerTabs() {
   return (
     <div className="flex flex-col h-full">
       {/* Top bar: project tabs left, API/Scheduler view switcher right */}
-      <div className="shrink-0 flex items-end border-b border-border bg-muted/60 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="shrink-0 flex items-center border-b border-border bg-muted h-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Project tabs */}
-        <div className="flex items-end gap-0 px-3 overflow-x-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex items-end gap-0 px-3 overflow-x-auto flex-1 h-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {groups.map(({ project, containers: cs }) => {
             const active = project === activeProject
             return (
@@ -95,36 +96,30 @@ export function ContainerTabs() {
                 onClick={() => setActiveProject(project)}
                 title={cs.map(c => c.name).join('\n')}
                 className={cn(
-                  'flex items-center gap-1.5 px-4 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap',
+                  'flex items-center px-4 h-full text-xs font-medium border-b-2 transition-colors whitespace-nowrap',
                   active
-                    ? 'border-primary text-primary bg-primary/10 rounded-t-sm'
+                    ? 'border-primary text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 )}
               >
                 <span className="font-semibold">{project}</span>
-                <span className={cn('text-[10px] font-mono', active ? 'text-primary/60' : 'text-muted-foreground/50')}>
-                  {cs.length}
-                </span>
               </button>
             )
           })}
         </div>
 
         {/* View switcher — right side */}
-        <div className="flex items-center gap-1 px-3 pb-2 shrink-0">
+        <div className="flex items-center gap-1 px-3 shrink-0">
           {(['api', 'scheduler'] as View[]).map(v => (
-            <button
+            <Button
               key={v}
+              size="xs"
+              variant={view === v ? 'default' : 'ghost'}
               onClick={() => setView(v)}
-              className={cn(
-                'px-3 py-1 text-[11px] font-medium rounded transition-colors capitalize',
-                view === v
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              )}
+              className="capitalize"
             >
               {v}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

@@ -23,7 +23,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   return (
     <>
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-mono break-all">{value}</dd>
+      <dd className="break-all">{value}</dd>
     </>
   )
 }
@@ -58,10 +58,10 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0 min-w-0">
-        <span className={cn('shrink-0 px-1.5 py-0.5 rounded border font-mono font-bold text-[10px] uppercase', statusClass)}>
+        <span className={cn('shrink-0 px-1.5 py-0.5 rounded border font-bold text-[10px] uppercase', statusClass)}>
           {statusLabel}
         </span>
-        <span className="flex-1 font-mono text-sm text-foreground truncate" title={type}>{type}</span>
+        <span className="flex-1 text-sm text-foreground truncate" title={type}>{type}</span>
         <button
           onClick={onClose}
           className="shrink-0 text-muted-foreground hover:text-foreground w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-base leading-none"
@@ -121,13 +121,13 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
               {started && (
                 <div className="flex items-start gap-2 px-2.5 py-1.5 text-muted-foreground/70 border-b border-border/40">
                   <span className="shrink-0 text-[10px] mt-0.5">▶</span>
-                  <span className="flex-1 break-all font-mono text-xs">{typeof startedE?.msg === 'string' ? startedE.msg : ''}</span>
+                  <span className="flex-1 break-all text-xs">{typeof startedE?.msg === 'string' ? startedE.msg : ''}</span>
                   <div className="shrink-0 flex flex-col items-end gap-0.5">
                     {typeof startedE?.timestamp === 'string' && (
-                      <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(startedE.timestamp, utc, true)}</span>
+                      <span className="text-muted-foreground/50 text-[10px]">{formatTimestamp(startedE.timestamp, utc, true)}</span>
                     )}
                     {typeof startedE?.caller === 'string' && (
-                      <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(startedE.caller)}</span>
+                      <span className="text-muted-foreground/40 text-[10px]">{callerFile(startedE.caller)}</span>
                     )}
                   </div>
                 </div>
@@ -136,13 +136,13 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
               {completed && (
                 <div className={cn('flex items-start gap-2 px-2.5 py-1.5', failed ? 'text-red-400' : 'text-muted-foreground/70')}>
                   <span className="shrink-0 text-[10px] mt-0.5">{failed ? '✕' : '■'}</span>
-                  <span className="flex-1 break-all font-mono text-xs">{typeof completedE?.msg === 'string' ? completedE.msg : ''}</span>
+                  <span className="flex-1 break-all text-xs">{typeof completedE?.msg === 'string' ? completedE.msg : ''}</span>
                   <div className="shrink-0 flex flex-col items-end gap-0.5">
                     {typeof completedE?.timestamp === 'string' && (
-                      <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(completedE.timestamp, utc, true)}</span>
+                      <span className="text-muted-foreground/50 text-[10px]">{formatTimestamp(completedE.timestamp, utc, true)}</span>
                     )}
                     {typeof completedE?.caller === 'string' && (
-                      <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(completedE.caller)}</span>
+                      <span className="text-muted-foreground/40 text-[10px]">{callerFile(completedE.caller)}</span>
                     )}
                   </div>
                 </div>

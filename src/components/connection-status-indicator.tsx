@@ -11,7 +11,7 @@ export function ConnectionStatusIndicator() {
     : 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-700'
 
   return (
-    <div className={`h-6 px-2 flex items-center gap-1.5 text-xs font-mono rounded-full border ${chip}`}>
+    <div className={`h-6 px-2 flex items-center gap-1.5 text-xs rounded-full border ${chip}`}>
       <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${error ? 'bg-red-500' : connected ? 'bg-green-500' : 'bg-amber-500'}`} />
       {error ? 'Error' : connected ? 'Live' : 'Connecting…'}
     </div>

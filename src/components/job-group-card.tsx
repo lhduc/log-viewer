@@ -58,7 +58,7 @@ function QueryRow({ entry }: { entry: LogEntry }) {
   return (
     <div className="border-t border-border/40">
       <div
-        className="flex items-start gap-2 px-2.5 py-1.5 cursor-pointer hover:bg-muted/30"
+        className="flex items-start gap-2 px-2.5 py-1.5 cursor-pointer hover:bg-muted"
         onClick={() => setExpanded(v => !v)}
       >
         <span className="shrink-0 font-semibold text-[10px] uppercase w-9 mt-px text-violet-500 dark:text-violet-400">SQL</span>
@@ -77,18 +77,20 @@ function QueryRow({ entry }: { entry: LogEntry }) {
           )}
         </div>
         <div className="shrink-0 flex flex-col items-end gap-0.5">
-          {durationMs && <span className="text-muted-foreground/60 text-[10px] font-mono">{durationMs}</span>}
-          {rows !== null && <span className="text-muted-foreground/40 text-[10px] font-mono">{rows} rows</span>}
+          {durationMs && <span className="text-muted-foreground/60 text-[10px]">{durationMs}</span>}
+          {rows !== null && <span className="text-muted-foreground/40 text-[10px]">{rows} rows</span>}
         </div>
       </div>
       {expanded && (
-        <div className="px-2.5 pb-2 bg-muted/20">
-          <div className="flex items-center justify-end pb-1">
-            <CopyButton value={sql} />
+        <div className="px-2.5 pb-2">
+          <div className="relative">
+            <pre className="overflow-x-auto p-2 rounded border border-border bg-muted text-xs leading-relaxed">
+              <SqlHighlight sql={formatted} />
+            </pre>
+            <div className="absolute top-1.5 right-1.5">
+              <CopyButton value={sql} className="bg-muted hover:bg-accent" />
+            </div>
           </div>
-          <pre className="overflow-x-auto p-2 rounded border border-border bg-background text-xs leading-relaxed">
-            <SqlHighlight sql={formatted} />
-          </pre>
         </div>
       )}
     </div>
@@ -114,17 +116,17 @@ export function UpdateRow({ entry }: { entry: LogEntry }) {
   return (
     <div className="border-t border-border/40">
       <div
-        className="flex items-start gap-2 px-2.5 py-1.5 cursor-pointer hover:bg-muted/30"
+        className="flex items-start gap-2 px-2.5 py-1.5 cursor-pointer hover:bg-muted"
         onClick={() => setExpanded(v => !v)}
       >
         <span className={cn(
           'shrink-0 font-semibold text-[10px] uppercase w-9 mt-px',
           isDebug ? 'text-muted-foreground/50' : 'text-blue-500 dark:text-blue-400'
         )}>{level}</span>
-        <span className="flex-1 break-all text-muted-foreground font-mono text-xs">{msg}</span>
+        <span className="flex-1 break-all text-muted-foreground text-xs">{msg}</span>
         <div className="shrink-0 flex flex-col items-end gap-0.5">
-          {time && <span className="text-muted-foreground/50 text-[10px] font-mono">{time}</span>}
-          {caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{caller}</span>}
+          {time && <span className="text-muted-foreground/50 text-[10px]">{time}</span>}
+          {caller && <span className="text-muted-foreground/40 text-[10px]">{caller}</span>}
         </div>
       </div>
       {expanded && (
@@ -162,7 +164,7 @@ export function JobGroupCard({ group }: { group: JobGroup }) {
   return (
     <div className={cn('text-xs border rounded', failed ? 'border-red-500/50 bg-red-500/5' : 'border-border')}>
       {/* Header */}
-      <div className="flex items-center gap-2 px-2.5 py-1.5 flex-wrap cursor-pointer hover:bg-muted/30" onClick={() => setCollapsed(v => !v)}>
+      <div className="flex items-center gap-2 px-2.5 py-1.5 flex-wrap cursor-pointer hover:bg-muted" onClick={() => setCollapsed(v => !v)}>
         <span className={cn(
           'shrink-0 font-bold leading-none',
           failed ? 'text-red-500 text-base' : isCompleted ? 'text-green-500 text-sm' : isRunning ? 'text-amber-500 text-sm' : 'text-muted-foreground text-sm'
@@ -170,34 +172,34 @@ export function JobGroupCard({ group }: { group: JobGroup }) {
           {failed ? '⚠' : isCompleted ? '✓' : isRunning ? '…' : isPollOnly ? '↻' : '?'}
         </span>
         <div className="flex flex-col ml-1">
-          <span className={cn('font-mono font-medium', failed ? 'text-red-400' : 'text-foreground')}>{type}</span>
+          <span className={cn('font-medium', failed ? 'text-red-400' : 'text-foreground')}>{type}</span>
           {showProcessor && (
-            <span className="font-mono text-[10px] text-muted-foreground">{processorName}</span>
+            <span className="text-[10px] text-muted-foreground">{processorName}</span>
           )}
           <span className="inline-flex items-center gap-1">
-            <span className="font-mono text-[10px] text-muted-foreground/60">{job_id}</span>
+            <span className="text-[10px] text-muted-foreground/60">{job_id}</span>
             <CopyButton value={job_id} />
           </span>
         </div>
         {updates.length > 0 && (
-          <span className="px-1.5 py-0.5 rounded border font-mono font-semibold text-[10px] text-sky-600 border-sky-300 bg-sky-50 dark:text-sky-300 dark:border-sky-600 dark:bg-sky-950">
+          <span className="px-1.5 py-0.5 rounded border font-semibold text-[10px] text-sky-600 border-sky-300 bg-sky-50 dark:text-sky-300 dark:border-sky-600 dark:bg-sky-950">
             ↻ {updates.length}×
           </span>
         )}
         {duration && (
-          <span className="px-1.5 py-0.5 rounded border font-mono text-[10px] text-muted-foreground border-border bg-muted/50">
+          <span className="px-1.5 py-0.5 rounded border text-[10px] text-muted-foreground border-border bg-muted">
             {duration}
           </span>
         )}
         {isRunning && <span className="text-amber-500 text-[10px]">running</span>}
         {retry !== undefined && maxRetry !== undefined && (
-          <span className="px-1.5 py-0.5 rounded border font-mono font-semibold text-[10px] text-purple-600 border-purple-400 bg-purple-100 dark:text-purple-300 dark:border-purple-500 dark:bg-purple-950">
+          <span className="px-1.5 py-0.5 rounded border font-semibold text-[10px] text-purple-600 border-purple-400 bg-purple-100 dark:text-purple-300 dark:border-purple-500 dark:bg-purple-950">
             retry {retry}/{maxRetry}
           </span>
         )}
         <span className="ml-auto flex flex-col items-end gap-0.5">
           {typeof startedE?.timestamp === 'string' && (
-            <span className="font-mono text-[10px] text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground">
               {formatTimestamp(startedE.timestamp, utc, true)}
             </span>
           )}
@@ -209,10 +211,10 @@ export function JobGroupCard({ group }: { group: JobGroup }) {
         {started && (
           <div className="flex items-start gap-2 px-2.5 py-1.5 border-t border-border/40 text-muted-foreground/70">
             <span className="shrink-0 text-[10px] mt-0.5">▶</span>
-            <span className="flex-1 break-all font-mono text-xs">{typeof startedE?.msg === 'string' ? startedE.msg : ''}</span>
+            <span className="flex-1 break-all text-xs">{typeof startedE?.msg === 'string' ? startedE.msg : ''}</span>
             <div className="shrink-0 flex flex-col items-end gap-0.5">
-              {!!startedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(startedE.timestamp as string, utc, true)}</span>}
-              {!!startedE?.caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(startedE!.caller as string)}</span>}
+              {!!startedE?.timestamp && <span className="text-muted-foreground/50 text-[10px]">{formatTimestamp(startedE.timestamp as string, utc, true)}</span>}
+              {!!startedE?.caller && <span className="text-muted-foreground/40 text-[10px]">{callerFile(startedE!.caller as string)}</span>}
             </div>
           </div>
         )}
@@ -222,10 +224,10 @@ export function JobGroupCard({ group }: { group: JobGroup }) {
         {completed && (
           <div className={cn('flex items-start gap-2 px-2.5 py-1.5 border-t border-border/40', failed ? 'text-red-400' : 'text-muted-foreground/70')}>
             <span className="shrink-0 text-[10px] mt-0.5">{failed ? '✕' : '■'}</span>
-            <span className="flex-1 break-all font-mono text-xs">{typeof completedE?.msg === 'string' ? completedE.msg : ''}</span>
+            <span className="flex-1 break-all text-xs">{typeof completedE?.msg === 'string' ? completedE.msg : ''}</span>
             <div className="shrink-0 flex flex-col items-end gap-0.5">
-              {!!completedE?.timestamp && <span className="text-muted-foreground/50 text-[10px] font-mono">{formatTimestamp(completedE.timestamp as string, utc, true)}</span>}
-              {!!completedE?.caller && <span className="text-muted-foreground/40 text-[10px] font-mono">{callerFile(completedE!.caller as string)}</span>}
+              {!!completedE?.timestamp && <span className="text-muted-foreground/50 text-[10px]">{formatTimestamp(completedE.timestamp as string, utc, true)}</span>}
+              {!!completedE?.caller && <span className="text-muted-foreground/40 text-[10px]">{callerFile(completedE!.caller as string)}</span>}
             </div>
           </div>
         )}
