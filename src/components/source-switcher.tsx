@@ -97,7 +97,7 @@ export function SourceSwitcher() {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle>Connect to source</DialogTitle>
           </DialogHeader>
