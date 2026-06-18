@@ -42,7 +42,7 @@ export function TimeModeToggle() {
     <Button
       variant="ghost"
       size="sm"
-      className="h-7 px-2 text-xs font-mono opacity-80 hover:opacity-100 hover:bg-primary-foreground/10"
+      className="h-7 px-2 text-xs font-mono text-primary-foreground opacity-80 hover:opacity-100 hover:text-primary-foreground hover:bg-primary-foreground/10"
       onClick={toggle}
       title="Toggle UTC / local time"
     >
