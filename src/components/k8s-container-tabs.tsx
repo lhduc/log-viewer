@@ -110,7 +110,7 @@ export function K8sContainerTabs() {
       setPods(data)
       setActiveService(prev => {
         if (prev) return prev
-        const groups = groupByService(data).filter(g => isProjectService(g.service))
+        const groups = groupByService(data.filter(p => isProjectService(p.name)))
         return groups[0]?.service ?? null
       })
     } catch {
@@ -146,7 +146,7 @@ export function K8sContainerTabs() {
     )
   }
 
-  const groups = groupByService(pods).filter(g => isProjectService(g.service))
+  const groups = groupByService(pods.filter(p => isProjectService(p.name)))
 
   return (
     <div className="flex flex-col h-full">
