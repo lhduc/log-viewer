@@ -131,8 +131,8 @@ export function SourceSwitcher() {
                         <div
                           key={`${conn.context}/${conn.namespace}`}
                           className={cn(
-                            'flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors hover:bg-muted',
-                            isActive ? 'border-primary bg-primary/5' : 'border-border'
+                            'flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors',
+                            isActive ? 'border-primary bg-primary/5' : 'border-transparent hover:border-border hover:bg-muted'
                           )}
                         >
                           <button
