@@ -17,6 +17,7 @@ interface RequestDetailProps {
   entry: HttpLogEntry
   onClose: () => void
   jobs: LogEntry[]
+  onBookmark?: (entry: HttpLogEntry) => void
 }
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -39,9 +40,9 @@ function SectionHeader({ title, copyValue }: { title: string; copyValue?: unknow
   )
 }
 
-export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
+export function RequestDetail({ entry, onClose, jobs, onBookmark }: RequestDetailProps) {
   const { mode } = useTimeMode()
-  const { toggle, isBookmarked } = useBookmarks()
+  const { isBookmarked } = useBookmarks()
   const bookmarked = entry.request_id ? isBookmarked(entry.request_id) : false
   const utc = mode === 'utc'
   const [timelineOpen, setTimelineOpen] = useState(false)
@@ -94,7 +95,7 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
         <span className="flex-1 text-sm text-foreground break-all">{uri}</span>
         <CopyButton value={uri} />
         <button
-          onClick={() => toggle(entry)}
+          onClick={() => onBookmark?.(entry)}
           className={cn(
             'shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-muted transition-colors',
             bookmarked ? 'text-primary' : 'text-muted-foreground hover:text-primary'

@@ -13,11 +13,12 @@ interface RequestRowProps {
   entry: HttpLogEntry
   selected: boolean
   onClick: () => void
+  onBookmark?: (entry: HttpLogEntry) => void
 }
 
-export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
+export function RequestRow({ entry, selected, onClick, onBookmark }: RequestRowProps) {
   const { mode } = useTimeMode()
-  const { toggle, isBookmarked } = useBookmarks()
+  const { isBookmarked } = useBookmarks()
   const bookmarked = entry.request_id ? isBookmarked(entry.request_id) : false
   const path = getUriPath(entry.uri)
   const time = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts, mode === 'utc', true)
@@ -73,7 +74,7 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
             </>
           )}
           <button
-            onClick={e => { e.stopPropagation(); toggle(entry) }}
+            onClick={e => { e.stopPropagation(); onBookmark?.(entry) }}
             className={cn(
               'shrink-0 transition-colors',
               bookmarked

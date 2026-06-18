@@ -19,7 +19,7 @@ function LogContent() {
 }
 
 export default function Home() {
-  const { bookmarks } = useBookmarks()
+  const { records: bookmarks } = useBookmarks()
   const [showBookmarks, setShowBookmarks] = useState(false)
 
   return (

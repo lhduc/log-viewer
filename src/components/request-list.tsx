@@ -8,9 +8,10 @@ interface RequestListProps {
   entries: HttpLogEntry[]
   selectedSeq: number | null
   onSelect: (entry: HttpLogEntry) => void
+  onBookmark?: (entry: HttpLogEntry) => void
 }
 
-export function RequestList({ entries, selectedSeq, onSelect }: RequestListProps) {
+export function RequestList({ entries, selectedSeq, onSelect, onBookmark }: RequestListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   // useRef to avoid stale closure in scroll handler
@@ -52,6 +53,7 @@ export function RequestList({ entries, selectedSeq, onSelect }: RequestListProps
             entry={entry}
             selected={entry._seq === selectedSeq}
             onClick={() => onSelect(entry)}
+            onBookmark={onBookmark}
           />
         ))}
         {/* Sentinel element — scroll target for auto-scroll to bottom */}

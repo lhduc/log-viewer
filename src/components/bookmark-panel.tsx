@@ -10,7 +10,7 @@ interface BookmarkViewProps {
 }
 
 export function BookmarkView({ onClose }: BookmarkViewProps) {
-  const { bookmarks, clear } = useBookmarks()
+  const { records, allLogs, clear } = useBookmarks()
 
   return (
     <div className="flex flex-col h-full">
@@ -19,11 +19,11 @@ export function BookmarkView({ onClose }: BookmarkViewProps) {
         <div className="flex items-center gap-1.5 flex-1">
           <Bookmark size={13} className="text-primary" />
           <span className="text-xs font-semibold text-foreground">Bookmarks</span>
-          {bookmarks.length > 0 && (
-            <span className="text-[10px] text-muted-foreground">({bookmarks.length})</span>
+          {records.length > 0 && (
+            <span className="text-[10px] text-muted-foreground">({records.length})</span>
           )}
         </div>
-        {bookmarks.length > 0 && (
+        {records.length > 0 && (
           <Button variant="ghost" size="xs" onClick={clear} className="text-muted-foreground text-[10px]">
             Clear all
           </Button>
@@ -37,7 +37,7 @@ export function BookmarkView({ onClose }: BookmarkViewProps) {
         </button>
       </div>
 
-      {bookmarks.length === 0 ? (
+      {records.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-2 text-muted-foreground">
           <Bookmark size={28} className="opacity-30" />
           <p className="text-sm">No bookmarks yet</p>
@@ -47,7 +47,7 @@ export function BookmarkView({ onClose }: BookmarkViewProps) {
         <LogPanel
           containerIds={[]}
           active={true}
-          externalLogs={bookmarks}
+          externalLogs={allLogs}
           externalConnected={true}
           externalError={null}
         />

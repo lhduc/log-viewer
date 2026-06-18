@@ -7,6 +7,7 @@ import { hasJobId } from '@/lib/job-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { useConnectionStatus } from '@/contexts/connection-status-context'
 import { useSettings } from '@/contexts/settings-context'
+import { useBookmarks } from '@/contexts/bookmark-context'
 
 import { LogToolbar } from './log-toolbar'
 import { RequestList } from './request-list'
@@ -43,6 +44,7 @@ export function LogPanel({
   const { mode: timeMode } = useTimeMode()
   const { setStatus } = useConnectionStatus()
   const { isExcluded } = useSettings()
+  const { toggle: bookmarkToggle } = useBookmarks()
 
   useEffect(() => {
     if (active && !external) setStatus(connected, error)
@@ -127,6 +129,12 @@ export function LogPanel({
         return ta - tb || a._seq - b._seq
       })
   }, [httpEntries, methodFilter, statusFilter, search, usernameFilter, jobMatchedRequestIds, timeFrom, timeTo, timeMode])
+
+  // Capture all correlated logs (jobs, SQL, events, etc.) at bookmark time
+  const handleBookmark = useCallback((entry: HttpLogEntry) => {
+    const correlated = entry.request_id ? (jobsByRequestId.get(entry.request_id) ?? []) : []
+    bookmarkToggle(entry, correlated)
+  }, [bookmarkToggle, jobsByRequestId])
 
   const toggleMethod = useCallback((method: string) => {
     setMethodFilter(prev => {
@@ -229,6 +237,7 @@ export function LogPanel({
               entries={filteredEntries}
               selectedSeq={selected?._seq ?? null}
               onSelect={entry => setSelected(prev => prev?._seq === entry._seq ? null : entry)}
+              onBookmark={handleBookmark}
             />
           )}
         </div>
@@ -251,6 +260,7 @@ export function LogPanel({
                 entry={selected}
                 onClose={() => setSelected(null)}
                 jobs={selectedJobs}
+                onBookmark={handleBookmark}
               />
             </div>
           </>
