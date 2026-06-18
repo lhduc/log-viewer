@@ -61,7 +61,7 @@ export function RequestList({ entries, selectedSeq, onSelect }: RequestListProps
       {paused && (
         <button
           onClick={resume}
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-full shadow-lg z-10"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1.5 rounded-full shadow-lg z-10"
         >
           ↓ Resume auto-scroll
         </button>

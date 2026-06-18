@@ -97,12 +97,12 @@ export function ContainerTabs() {
                 className={cn(
                   'flex items-center gap-1.5 px-4 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap',
                   active
-                    ? 'border-primary text-foreground'
+                    ? 'border-primary text-primary bg-primary/10 rounded-t-sm'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 )}
               >
                 <span className="font-semibold">{project}</span>
-                <span className={cn('text-[10px] font-mono', active ? 'text-muted-foreground' : 'text-muted-foreground/50')}>
+                <span className={cn('text-[10px] font-mono', active ? 'text-primary/60' : 'text-muted-foreground/50')}>
                   {cs.length}
                 </span>
               </button>
@@ -111,16 +111,16 @@ export function ContainerTabs() {
         </div>
 
         {/* View switcher — right side */}
-        <div className="flex items-center gap-0 px-3 pb-0 shrink-0">
+        <div className="flex items-center gap-1 px-3 pb-2 shrink-0">
           {(['api', 'scheduler'] as View[]).map(v => (
             <button
               key={v}
               onClick={() => setView(v)}
               className={cn(
-                'px-3 py-2 text-[11px] font-medium border-b-2 transition-colors capitalize',
+                'px-3 py-1 text-[11px] font-medium rounded transition-colors capitalize',
                 view === v
-                  ? 'border-primary text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
               {v}
