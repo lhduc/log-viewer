@@ -14,7 +14,6 @@ export async function GET(req: Request) {
   }
 
   const encoder = new TextEncoder()
-  let seq = 0
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -36,7 +35,7 @@ export async function GET(req: Request) {
             } catch {
               entry = { message: line, _raw: true }
             }
-            enqueue({ ...entry, _stream: streamType, _seq: seq++ })
+            enqueue({ ...entry, _stream: streamType })
           })
 
           logStream.on('error', (err: Error) => {
