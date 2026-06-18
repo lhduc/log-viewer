@@ -1,6 +1,6 @@
 // Only stream logs for services whose names contain these keywords.
 // Everything else (redis, fe, admin, nginx, etc.) is excluded.
-const PROJECT_KEYWORDS = ['api', 'worker']
+const PROJECT_KEYWORDS = ['api', 'worker', 'scheduler']
 
 export function isProjectService(name: string): boolean {
   const lower = name.toLowerCase()
