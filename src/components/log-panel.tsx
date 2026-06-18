@@ -21,16 +21,30 @@ interface LogPanelProps {
   containerIds: string[]
   active: boolean
   view?: 'api' | 'scheduler'
+  // k8s mode: caller owns the stream, passes logs in directly
+  externalLogs?: LogEntry[]
+  externalConnected?: boolean
+  externalError?: string | null
+  onClear?: () => void
 }
 
-export function LogPanel({ containerIds, active, view = 'api' }: LogPanelProps) {
-  const { logs, connected, error, clear } = useLogStream(containerIds, active)
+export function LogPanel({
+  containerIds, active, view = 'api',
+  externalLogs, externalConnected, externalError, onClear,
+}: LogPanelProps) {
+  const external = externalLogs !== undefined
+  const stream = useLogStream(external ? [] : containerIds, external ? false : active)
+  const logs = external ? (externalLogs ?? []) : stream.logs
+  const connected = external ? (externalConnected ?? false) : stream.connected
+  const error = external ? (externalError ?? null) : stream.error
+  const clear = external ? (onClear ?? (() => {})) : stream.clear
+
   const { mode: timeMode } = useTimeMode()
   const { setStatus } = useConnectionStatus()
 
   useEffect(() => {
-    if (active) setStatus(connected, error)
-  }, [active, connected, error, setStatus])
+    if (active && !external) setStatus(connected, error)
+  }, [active, external, connected, error, setStatus])
 
   const [methodFilter, setMethodFilter] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState('all')

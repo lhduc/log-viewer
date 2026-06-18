@@ -1,7 +1,16 @@
+'use client'
+
+import { useSource } from '@/contexts/source-context'
 import { ContainerTabs } from '@/components/container-tabs'
+import { K8sContainerTabs } from '@/components/k8s-container-tabs'
+import { SourceSwitcher } from '@/components/source-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { TimeModeToggle } from '@/components/time-mode-toggle'
-import { ConnectionStatusIndicator } from '@/components/connection-status-indicator'
+
+function MainContent() {
+  const { mode } = useSource()
+  return mode === 'k8s' ? <K8sContainerTabs /> : <ContainerTabs />
+}
 
 export default function Home() {
   return (
@@ -12,12 +21,12 @@ export default function Home() {
           Log Viewer
         </span>
         <div className="flex-1" />
-        <ConnectionStatusIndicator />
+        <SourceSwitcher />
         <TimeModeToggle />
         <ThemeToggle />
       </header>
       <div className="flex-1 min-h-0">
-        <ContainerTabs />
+        <MainContent />
       </div>
       <footer className="shrink-0 flex items-center justify-center px-4 h-7 border-t border-border bg-muted text-[10px] text-muted-foreground">
         Maintainer: Duc Le (lehongduc87@gmail.com)

@@ -3,6 +3,7 @@ import { Geist_Mono, Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { TimeModeProvider } from "@/contexts/time-mode-context";
 import { ConnectionStatusProvider } from "@/contexts/connection-status-context";
+import { SourceProvider } from "@/contexts/source-context";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -30,11 +31,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
-          <TimeModeProvider>
-            <ConnectionStatusProvider>
-              {children}
-            </ConnectionStatusProvider>
-          </TimeModeProvider>
+          <SourceProvider>
+            <TimeModeProvider>
+              <ConnectionStatusProvider>
+                {children}
+              </ConnectionStatusProvider>
+            </TimeModeProvider>
+          </SourceProvider>
         </ThemeProvider>
       </body>
     </html>
