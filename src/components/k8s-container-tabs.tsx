@@ -157,10 +157,7 @@ export function K8sContainerTabs() {
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 )}
               >
-                <span className="font-semibold capitalize">{service}</span>
-                {podCount > 1 && (
-                  <span className="text-[10px] text-muted-foreground">×{podCount}</span>
-                )}
+                <span className="font-semibold">{service}</span>
               </button>
             )
           })}
