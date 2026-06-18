@@ -59,42 +59,41 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
             {time}
           </span>
         )}
+      </div>
+
+      {/* Secondary line: bookmark under method badge, request_id + username on right */}
+      <div className="mt-0.5 flex items-center gap-3">
+        {/* bookmark sits in the same w-14 column as the method badge */}
         <button
           onClick={e => { e.stopPropagation(); toggle(entry) }}
           className={cn(
-            'shrink-0 transition-colors',
+            'shrink-0 w-14 flex justify-center transition-colors',
             bookmarked
-              ? 'text-primary opacity-100'
+              ? 'text-primary'
               : 'text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary'
           )}
           aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'}
         >
-          <Bookmark size={12} fill={bookmarked ? 'currentColor' : 'none'} />
+          <Bookmark size={11} fill={bookmarked ? 'currentColor' : 'none'} />
         </button>
-      </div>
-
-      {/* Secondary line: request_id left, username right */}
-      {(username || requestId) && (
-        <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
-          {requestId && (
-            <>
-              <span className="text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <CopyButton value={requestId} />
-              </span>
-            </>
-          )}
-          <div className="flex-1" />
-          {username && (
-            <span className="flex items-center gap-1 shrink-0">
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <CopyButton value={username} />
-              </span>
-              <span className="text-[10px] text-muted-foreground/60">{username}</span>
+        {requestId && (
+          <>
+            <span className="text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <CopyButton value={requestId} />
             </span>
-          )}
-        </div>
-      )}
+          </>
+        )}
+        <div className="flex-1" />
+        {username && (
+          <span className="flex items-center gap-1 shrink-0">
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <CopyButton value={username} />
+            </span>
+            <span className="text-[10px] text-muted-foreground/60">{username}</span>
+          </span>
+        )}
+      </div>
     </div>
   )
 }
