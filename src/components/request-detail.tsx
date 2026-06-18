@@ -1,11 +1,13 @@
 'use client'
 
 import { Fragment, useState } from 'react'
+import { Bookmark } from 'lucide-react'
 import type { HttpLogEntry, LogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle } from '@/lib/request-utils'
 import { groupJobs, getJobDuration, hasJobId, type JobGroup } from '@/lib/job-utils'
 import { formatTimestamp } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
+import { useBookmarks } from '@/contexts/bookmark-context'
 import { JsonViewer } from './json-viewer'
 import { CopyButton } from './copy-button'
 import { JobGroupCard, UpdateRow } from './job-group-card'
@@ -39,6 +41,8 @@ function SectionHeader({ title, copyValue }: { title: string; copyValue?: unknow
 
 export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
   const { mode } = useTimeMode()
+  const { toggle, isBookmarked } = useBookmarks()
+  const bookmarked = entry.request_id ? isBookmarked(entry.request_id) : false
   const utc = mode === 'utc'
   const [timelineOpen, setTimelineOpen] = useState(false)
   const time = formatTimestamp(entry.timestamp ?? (entry as Record<string, unknown>).time ?? (entry as Record<string, unknown>).ts, utc)
@@ -89,6 +93,16 @@ export function RequestDetail({ entry, onClose, jobs }: RequestDetailProps) {
         </span>
         <span className="flex-1 text-sm text-foreground break-all">{uri}</span>
         <CopyButton value={uri} />
+        <button
+          onClick={() => toggle(entry)}
+          className={cn(
+            'shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-muted transition-colors',
+            bookmarked ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+          )}
+          aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'}
+        >
+          <Bookmark size={13} fill={bookmarked ? 'currentColor' : 'none'} />
+        </button>
         <button
           onClick={onClose}
           className="shrink-0 text-muted-foreground hover:text-foreground w-6 h-6 flex items-center justify-center rounded hover:bg-muted text-base leading-none"

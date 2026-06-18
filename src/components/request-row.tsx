@@ -1,9 +1,11 @@
 'use client'
 
+import { Bookmark } from 'lucide-react'
 import type { HttpLogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle, getUriPath } from '@/lib/request-utils'
 import { formatTimestamp } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
+import { useBookmarks } from '@/contexts/bookmark-context'
 import { CopyButton } from './copy-button'
 import { cn } from '@/lib/utils'
 
@@ -15,6 +17,8 @@ interface RequestRowProps {
 
 export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
   const { mode } = useTimeMode()
+  const { toggle, isBookmarked } = useBookmarks()
+  const bookmarked = entry.request_id ? isBookmarked(entry.request_id) : false
   const path = getUriPath(entry.uri)
   const time = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts, mode === 'utc', true)
   const requestId = entry.request_id as string | undefined
@@ -55,6 +59,18 @@ export function RequestRow({ entry, selected, onClick }: RequestRowProps) {
             {time}
           </span>
         )}
+        <button
+          onClick={e => { e.stopPropagation(); toggle(entry) }}
+          className={cn(
+            'shrink-0 transition-colors',
+            bookmarked
+              ? 'text-primary opacity-100'
+              : 'text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary'
+          )}
+          aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'}
+        >
+          <Bookmark size={12} fill={bookmarked ? 'currentColor' : 'none'} />
+        </button>
       </div>
 
       {/* Secondary line: request_id left, username right */}
