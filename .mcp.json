@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "context-pilot": {
+      "command": "context-pilot",
+      "args": [
+        "serve"
+      ],
+      "env": {
+        "CONTEXT_PILOT_DATA_DIR": "/Users/ducle/Development/www/log-viewer/.context-pilot",
+        "CONTEXT_PILOT_REST_PORT": "3001"
+      }
+    }
+  }
+}
