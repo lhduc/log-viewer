@@ -6,8 +6,11 @@ import { ConnectionStatusIndicator } from '@/components/connection-status-indica
 export default function Home() {
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
-      <header className="shrink-0 flex items-center gap-2 px-4 h-10 border-b border-border bg-muted">
-        <span className="text-sm font-semibold">Log Viewer</span>
+      <header className="shrink-0 flex items-center gap-2 px-4 h-10 border-b border-primary/20 bg-primary text-primary-foreground">
+        <span className="text-sm font-semibold flex items-center gap-1.5">
+          <span className="text-base leading-none">≡</span>
+          Log Viewer
+        </span>
         <div className="flex-1" />
         <ConnectionStatusIndicator />
         <TimeModeToggle />
