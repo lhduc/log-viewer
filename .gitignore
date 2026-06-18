@@ -41,6 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # context-pilot local data
+.claude/
 .context-pilot/
 docs/
 plans/
