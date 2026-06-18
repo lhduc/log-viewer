@@ -32,9 +32,9 @@ function detectPrefix(names: string[]): string {
 
 // Group all pods under one project tab derived from the common prefix.
 // e.g. pods named nebula-* → one group called "nebula".
-function groupByProject(pods: K8sPod[], allPods: K8sPod[]): ServiceGroup[] {
+function groupByProject(pods: K8sPod[], allPods: K8sPod[], fallback: string): ServiceGroup[] {
   const prefix = detectPrefix(allPods.map(p => p.name))
-  const project = prefix.endsWith('-') ? prefix.slice(0, -1) : prefix || 'default'
+  const project = prefix.endsWith('-') ? prefix.slice(0, -1) : prefix || fallback
   return pods.length ? [{ service: project, pods }] : []
 }
 
@@ -100,7 +100,7 @@ export function K8sContainerTabs() {
       setPods(data)
       setActiveService(prev => {
         if (prev) return prev
-        const groups = groupByProject(data.filter(p => isProjectService(p.name)), data)
+        const groups = groupByProject(data.filter(p => isProjectService(p.name)), data, namespace)
         return groups[0]?.service ?? null
       })
     } catch {
@@ -136,7 +136,7 @@ export function K8sContainerTabs() {
     )
   }
 
-  const groups = groupByProject(pods.filter(p => isProjectService(p.name)), pods)
+  const groups = groupByProject(pods.filter(p => isProjectService(p.name)), pods, namespace)
 
   return (
     <div className="flex flex-col h-full">
