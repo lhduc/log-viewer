@@ -1,5 +1,6 @@
 import { getContainerLogStream } from '@/lib/docker-client'
 import { demuxDockerStream } from '@/lib/log-demux'
+import { sseError } from '@/lib/api-error'
 
 export async function GET(
   req: Request,
@@ -31,7 +32,7 @@ export async function GET(
 
         logStream.on('end', () => controller.close())
         logStream.on('error', (err: Error) => {
-          enqueue({ _error: String(err) })
+          controller.enqueue(encoder.encode(sseError(err, `container=${id} stream`)))
           controller.close()
         })
 
@@ -40,7 +41,7 @@ export async function GET(
           controller.close()
         })
       } catch (err) {
-        enqueue({ _error: `Failed to attach to container: ${String(err)}` })
+        controller.enqueue(encoder.encode(sseError(err, `container=${id} attach`)))
         controller.close()
       }
     }

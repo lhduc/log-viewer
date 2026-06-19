@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { listPods } from '@/lib/k8s-client'
+import { apiError } from '@/lib/api-error'
 
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams
@@ -10,6 +11,6 @@ export async function GET(req: Request) {
     const pods = await listPods(context, namespace)
     return NextResponse.json(pods)
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 503 })
+    return apiError(err, `GET /api/k8s/pods context=${context} namespace=${namespace}`, 503)
   }
 }

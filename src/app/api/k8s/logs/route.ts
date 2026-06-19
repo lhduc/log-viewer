@@ -1,4 +1,5 @@
 import { streamPodLogs } from '@/lib/k8s-client'
+import { sseError } from '@/lib/api-error'
 
 // Accepts ?context=...&namespace=...&pods=pod1:container1,pod2:container2
 export async function GET(req: Request) {
@@ -47,7 +48,9 @@ export async function GET(req: Request) {
             enqueue({ ...entry, _stream: 'stdout', _pod: podName, _seq: seq++ })
           }
         })
-        s.on('error', (err: Error) => enqueue({ _error: String(err), _pod: podName }))
+        s.on('error', (err: Error) => {
+          controller.enqueue(encoder.encode(sseError(err, `pod=${podName} stream`)))
+        })
       }
 
       try {
@@ -55,11 +58,13 @@ export async function GET(req: Request) {
           targets.map(({ pod, container }) =>
             streamPodLogs(context, namespace, pod, container, tail)
               .then(s => attachStream(s, pod))
-              .catch(err => enqueue({ _error: `Failed to attach ${pod}/${container}: ${String(err)}` }))
+              .catch(err => {
+              controller.enqueue(encoder.encode(sseError(err, `pod=${pod} container=${container} attach`)))
+            })
           )
         )
       } catch (err) {
-        enqueue({ _error: String(err) })
+        controller.enqueue(encoder.encode(sseError(err, `k8s/logs context=${context} namespace=${namespace}`)))
         controller.close()
         return
       }
