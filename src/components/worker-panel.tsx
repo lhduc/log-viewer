@@ -1,14 +1,17 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { EyeOff } from 'lucide-react'
 import type { LogEntry } from '@/types/log'
 import type { JobGroup } from '@/lib/job-utils'
 import { groupJobs, hasJobId, getJobDuration } from '@/lib/job-utils'
 import { formatTimestamp } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
+import { useSettings } from '@/contexts/settings-context'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { DateTimeRangePicker } from '@/components/ui/date-time-range-picker'
+import { ExcludedJobsDialog } from '@/components/settings-menu'
 import { isFailed } from './job-group-card'
 import { JobDetail } from './job-detail'
 import { CopyButton } from './copy-button'
@@ -121,10 +124,12 @@ interface WorkerPanelProps {
 
 export function WorkerPanel({ logs }: WorkerPanelProps) {
   const { mode } = useTimeMode()
+  const { excludedJobs, isJobExcluded } = useSettings()
   const [search, setSearch] = useState('')
   const [usernameFilter, setUsernameFilter] = useState('')
   const [timeFrom, setTimeFrom] = useState('')
   const [timeTo, setTimeTo] = useState('')
+  const [excludedOpen, setExcludedOpen] = useState(false)
   const [selected, setSelected] = useState<JobGroup | null>(null)
   const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
   const splitRef = useRef<HTMLDivElement>(null)
@@ -157,6 +162,7 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
 
     return jobGroups
       .filter(group => {
+        if (isJobExcluded(group.type)) return false
         if (q) {
           const matchId = group.job_id.toLowerCase().includes(q)
           const matchType = group.type.toLowerCase().includes(q)
@@ -201,7 +207,7 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
         }
         return tsOf(a) - tsOf(b)
       })
-  }, [jobGroups, search, usernameFilter, timeFrom, timeTo, mode])
+  }, [jobGroups, search, usernameFilter, timeFrom, timeTo, mode, isJobExcluded])
 
   useEffect(() => {
     if (!pausedRef.current) {
@@ -278,6 +284,24 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
           onChangeFrom={setTimeFrom}
           onChangeTo={setTimeTo}
         />
+
+        {/* Excluded Job Types */}
+        <button
+          onClick={() => setExcludedOpen(true)}
+          className={cn(
+            'shrink-0 h-6 w-6 flex items-center justify-center rounded transition-colors',
+            excludedJobs.length > 0
+              ? 'text-primary hover:bg-muted'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          )}
+          aria-label="Excluded Jobs"
+          title={excludedJobs.length > 0 ? `${excludedJobs.length} excluded job type${excludedJobs.length > 1 ? 's' : ''}` : 'Excluded Jobs'}
+        >
+          <EyeOff size={13} />
+        </button>
+
+        <ExcludedJobsDialog open={excludedOpen} onOpenChange={setExcludedOpen} />
+
         <div className="flex-1" />
         <span className="text-[10px] text-muted-foreground shrink-0">
           {filteredGroups.length} / {jobGroups.length} jobs
