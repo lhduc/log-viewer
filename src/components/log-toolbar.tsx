@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search } from 'lucide-react'
+import { EyeOff, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DateTimeRangePicker } from '@/components/ui/date-time-range-picker'
+import { ExcludedUrlsDialog } from '@/components/settings-menu'
 import { METHOD_STYLES, STATUS_STYLES } from '@/lib/request-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
+import { useSettings } from '@/contexts/settings-context'
 import { cn } from '@/lib/utils'
 
 const QUICK_RANGES = [
@@ -80,7 +82,9 @@ export function LogToolbar({
 }: LogToolbarProps) {
   const [inputValue, setInputValue] = useState(search)
   const [usernameValue, setUsernameValue] = useState(usernameFilter)
+  const [excludedOpen, setExcludedOpen] = useState(false)
   const { mode } = useTimeMode()
+  const { excludedUrls } = useSettings()
 
   useEffect(() => {
     const timer = setTimeout(() => onSearch(inputValue), 300)
@@ -196,6 +200,23 @@ export function LogToolbar({
         onChangeFrom={onTimeFrom}
         onChangeTo={onTimeTo}
       />
+
+      {/* Excluded URLs */}
+      <button
+        onClick={() => setExcludedOpen(true)}
+        className={cn(
+          'shrink-0 h-6 w-6 flex items-center justify-center rounded transition-colors',
+          excludedUrls.length > 0
+            ? 'text-primary hover:bg-muted'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+        )}
+        aria-label="Excluded URLs"
+        title={excludedUrls.length > 0 ? `${excludedUrls.length} excluded URL${excludedUrls.length > 1 ? 's' : ''}` : 'Excluded URLs'}
+      >
+        <EyeOff size={13} />
+      </button>
+
+      <ExcludedUrlsDialog open={excludedOpen} onOpenChange={setExcludedOpen} />
 
       <div className="flex-1" />
 

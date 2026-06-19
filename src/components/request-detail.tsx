@@ -125,8 +125,8 @@ export function RequestDetail({ entry, onClose, jobs, onBookmark }: RequestDetai
             ]
             const rightFields: { label: string; value: React.ReactNode }[] = [
               ...(time ? [{ label: 'Time', value: time }] : []),
-              ...(username ? [{ label: 'Username', value: <span className="inline-flex items-center gap-2">{username as string}<CopyButton value={username as string} /></span> }] : []),
               ...(request_id ? [{ label: 'Request ID', value: <span className="inline-flex items-center gap-2">{request_id as string}<CopyButton value={request_id as string} /></span> }] : []),
+              ...(username ? [{ label: 'Username', value: <span className="inline-flex items-center gap-2">{username as string}<CopyButton value={username as string} /></span> }] : []),
             ]
             const rows = Math.max(leftFields.length, rightFields.length)
             return (

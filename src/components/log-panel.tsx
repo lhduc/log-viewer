@@ -39,7 +39,7 @@ export function LogPanel({
   const logs = external ? (externalLogs ?? []) : stream.logs
   const connected = external ? (externalConnected ?? false) : stream.connected
   const error = external ? (externalError ?? null) : stream.error
-  const clear = external ? (onClear ?? (() => {})) : stream.clear
+  const clearStream = external ? (onClear ?? (() => {})) : stream.clear
 
   const { mode: timeMode } = useTimeMode()
   const { setStatus } = useConnectionStatus()
@@ -58,6 +58,8 @@ export function LogPanel({
   const [timeTo, setTimeTo] = useState('')
   const [selected, setSelected] = useState<HttpLogEntry | null>(null)
   const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
+
+  const clear = useCallback(() => { clearStream(); setSelected(null) }, [clearStream])
 
   const splitRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)

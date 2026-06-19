@@ -12,6 +12,54 @@ import { SqlHighlight } from '@/lib/sql-highlight'
 import { format as formatSql } from 'sql-formatter'
 import { cn } from '@/lib/utils'
 
+interface StackFrame { fn: string; shortFn: string; file: string }
+
+function parseStackTrace(raw: string): StackFrame[] {
+  const frames: StackFrame[] = []
+  for (const line of raw.split('\n')) {
+    if (!line) continue
+    if (line.startsWith('\t') || line.startsWith('  ')) {
+      if (frames.length > 0) frames[frames.length - 1].file = line.trim()
+    } else {
+      const parts = line.split('/')
+      frames.push({ fn: line, shortFn: parts[parts.length - 1] ?? line, file: '' })
+    }
+  }
+  return frames
+}
+
+function StackTrace({ raw }: { raw: string }) {
+  const frames = parseStackTrace(raw)
+  if (frames.length === 0) return null
+  return (
+    <div className="px-2.5 py-1">
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Trace</p>
+      <div className="flex flex-col">
+        {frames.map((f, i) => (
+          <div key={i} className="flex gap-2 min-w-0">
+            {/* dot + connector */}
+            <div className="flex flex-col items-center shrink-0">
+              <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 mt-[3px] shrink-0" />
+              {i < frames.length - 1 && <div className="w-px flex-1 bg-border mt-0.5 mb-0.5" />}
+            </div>
+            {/* frame content */}
+            <div className={cn('min-w-0', i < frames.length - 1 ? 'pb-2' : '')}>
+              <p className="text-[10px] font-mono text-foreground/80 break-all leading-snug" title={f.fn}>
+                {f.shortFn}
+              </p>
+              {f.file && (
+                <p className="text-[10px] font-mono text-muted-foreground/60 break-all leading-snug">
+                  {f.file}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function callerFile(caller: unknown): string | null {
   if (typeof caller !== 'string') return null
   const parts = caller.split('/')
@@ -19,7 +67,7 @@ export function callerFile(caller: unknown): string | null {
 }
 
 export function jobPayload(job: LogEntry): Record<string, unknown> {
-  const { _stream, _raw, _seq, ...rest } = job as Record<string, unknown>
+  const { _stream, _raw, _seq, caller: _caller, stack: _stack, ...rest } = job as Record<string, unknown>
   return rest as Record<string, unknown>
 }
 
@@ -109,8 +157,13 @@ export function UpdateRow({ entry }: { entry: LogEntry }) {
 
   const msg = typeof e.msg === 'string' ? e.msg : ''
   const caller = callerFile(e.caller)
+  const callerRaw = typeof e.caller === 'string' ? e.caller : null
+  const stack = typeof e.stack === 'string' ? e.stack : null
   const level = typeof e.level === 'string' ? e.level : ''
-  const isDebug = level.toUpperCase() === 'DEBUG'
+  const levelUp = level.toUpperCase()
+  const isDebug = levelUp === 'DEBUG'
+  const isError = levelUp === 'ERROR' || levelUp === 'FATAL' || levelUp === 'CRITICAL'
+  const isWarn  = levelUp === 'WARN' || levelUp === 'WARNING'
   const time = formatTimestamp(e.timestamp ?? e.time ?? e.ts, mode === 'utc', true)
 
   return (
@@ -121,7 +174,10 @@ export function UpdateRow({ entry }: { entry: LogEntry }) {
       >
         <span className={cn(
           'shrink-0 font-semibold text-[10px] uppercase w-9 mt-px',
-          isDebug ? 'text-muted-foreground/50' : 'text-blue-500 dark:text-blue-400'
+          isDebug ? 'text-muted-foreground/50'
+          : isError ? 'text-red-500 dark:text-red-400'
+          : isWarn  ? 'text-amber-500 dark:text-amber-400'
+          : 'text-blue-500 dark:text-blue-400'
         )}>{level}</span>
         <span className="flex-1 break-all text-muted-foreground text-xs">{msg}</span>
         <div className="shrink-0 flex flex-col items-end gap-0.5">
@@ -130,8 +186,9 @@ export function UpdateRow({ entry }: { entry: LogEntry }) {
         </div>
       </div>
       {expanded && (
-        <div className="px-2.5 pb-2">
+        <div className="px-2.5 pb-2 flex flex-col gap-2">
           <JsonViewer data={jobPayload(entry)} />
+          {(stack ?? callerRaw) && <StackTrace raw={stack ?? callerRaw!} />}
         </div>
       )}
     </div>

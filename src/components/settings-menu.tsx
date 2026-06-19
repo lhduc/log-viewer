@@ -2,14 +2,13 @@
 
 import { useState, useRef } from 'react'
 import { X } from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useSettings } from '@/contexts/settings-context'
 
-function ExcludedUrlsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function ExcludedUrlsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { excludedUrls, addExcludedUrl, removeExcludedUrl } = useSettings()
   const [input, setInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -25,14 +24,11 @@ function ExcludedUrlsDialog({ open, onOpenChange }: { open: boolean; onOpenChang
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm gap-0 p-7 rounded-2xl" showCloseButton={false}>
         {/* Header */}
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Settings</p>
-            <DialogTitle className="text-xl font-bold text-foreground">Excluded URLs</DialogTitle>
-          </div>
+        <div className="flex items-center justify-between mb-5">
+          <DialogTitle>Excluded URLs</DialogTitle>
           <button
             onClick={() => onOpenChange(false)}
-            className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5"
+            className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             <X size={15} />
           </button>
@@ -81,24 +77,9 @@ function ExcludedUrlsDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 }
 
 export function SettingsMenu() {
-  const [excludedOpen, setExcludedOpen] = useState(false)
-
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="rounded-full border-0 bg-transparent p-0 cursor-pointer focus-visible:outline-none">
-          <Avatar size="sm" className="hover:opacity-80 transition-opacity">
-            <AvatarFallback className="bg-white/20 text-primary-foreground text-[10px] font-semibold">DL</AvatarFallback>
-          </Avatar>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-44">
-          <DropdownMenuItem onClick={() => setExcludedOpen(true)}>
-            Excluded URLs
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <ExcludedUrlsDialog open={excludedOpen} onOpenChange={setExcludedOpen} />
-    </>
+    <Avatar size="sm" className="opacity-80">
+      <AvatarFallback className="bg-white/20 text-primary-foreground text-[10px] font-semibold">DL</AvatarFallback>
+    </Avatar>
   )
 }

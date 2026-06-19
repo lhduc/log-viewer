@@ -24,7 +24,7 @@ export function BookmarkView({ onClose }: BookmarkViewProps) {
           )}
         </div>
         {records.length > 0 && (
-          <Button variant="ghost" size="xs" onClick={clear} className="text-muted-foreground text-[10px]">
+          <Button variant="outline" size="xs" onClick={clear} className="text-[10px] h-6">
             Clear all
           </Button>
         )}
