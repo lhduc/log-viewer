@@ -1,4 +1,5 @@
 import { streamPodLogs } from '@/lib/k8s-client'
+import { isNamespaceAllowed } from '@/lib/k8s-allowlist'
 import { sseError } from '@/lib/api-error'
 
 // Accepts ?context=...&namespace=...&pods=pod1:container1,pod2:container2
@@ -11,6 +12,10 @@ export async function GET(req: Request) {
 
   if (!context || !namespace || !podsParam) {
     return new Response(JSON.stringify({ error: 'context, namespace, pods required' }), { status: 400 })
+  }
+
+  if (!isNamespaceAllowed(context, namespace)) {
+    return new Response(JSON.stringify({ error: 'Not allowed' }), { status: 403 })
   }
 
   const targets = podsParam.split(',').map(s => {

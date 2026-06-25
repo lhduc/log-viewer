@@ -1,0 +1,19 @@
+# K8s Allowlist Configuration
+# Copy this file to k8s-allowlist.yaml and edit for your environment.
+# k8s-allowlist.yaml is gitignored — never commit credentials.
+#
+# Each entry defines one allowed context + namespace combination.
+# Optional `projects` list filters pods by name prefix (e.g. "api" matches "api-abc123").
+# Omit `projects` to show all pods in the namespace.
+
+allowed:
+  - context: production
+    namespace: default
+    projects:
+      - api
+      - worker
+      - scheduler
+
+  - context: staging
+    namespace: staging
+    # no projects filter → all pods in namespace are shown

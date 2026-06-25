@@ -43,6 +43,25 @@ export function SourceSwitcher() {
       const data: K8sContext[] = await res.json()
       setContexts(data)
       setSelectedContext(data[0]?.name ?? '')
+
+      // Auto-connect when allowlist has exactly 1 context + 1 namespace
+      if (data.length === 1) {
+        const nsRes = await fetch(`/api/k8s/namespaces?context=${encodeURIComponent(data[0].name)}`)
+        if (nsRes.ok) {
+          const nsData: string[] = await nsRes.json()
+          if (nsData.length === 1) {
+            switchToK8s({ context: data[0].name, namespace: nsData[0] })
+            setOpen(false)
+            return
+          }
+          setNamespaces(nsData)
+          setSelectedNamespace(nsData[0] ?? '')
+          setSelectedContext(data[0].name)
+          setStep('pick-namespace')
+          return
+        }
+      }
+
       setStep('pick-context')
     } catch (e) {
       setFetchError(String(e))
@@ -105,12 +124,14 @@ export function SourceSwitcher() {
 
           {step === 'pick-source' && (
             <div className="flex flex-col gap-2 pt-1">
-              <SourceOption
-                title="Local Docker"
-                description="Stream logs from containers on this machine"
-                active={mode === 'local'}
-                onClick={() => { switchToLocal(); setOpen(false) }}
-              />
+              {process.env.NEXT_PUBLIC_DISABLE_LOCAL_DOCKER !== 'true' && (
+                <SourceOption
+                  title="Local Docker"
+                  description="Stream logs from containers on this machine"
+                  active={mode === 'local'}
+                  onClick={() => { switchToLocal(); setOpen(false) }}
+                />
+              )}
               <SourceOption
                 title="Kubernetes"
                 description="Connect to a cluster via ~/.kube/config"

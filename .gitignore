@@ -45,3 +45,4 @@ next-env.d.ts
 .context-pilot/
 docs/
 plans/
+k8s-allowlist.yaml
