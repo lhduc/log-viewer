@@ -1,5 +1,6 @@
 'use client'
 
+import { Fragment } from 'react'
 import type { JobGroup } from '@/lib/job-utils'
 import { getJobDuration } from '@/lib/job-utils'
 import { formatTimestamp } from '@/lib/log-utils'
@@ -22,7 +23,7 @@ function SectionHeader({ title }: { title: string }) {
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <>
-      <dt className="text-muted-foreground">{label}</dt>
+      <dt className="text-muted-foreground whitespace-nowrap">{label}</dt>
       <dd className="break-all">{value}</dd>
     </>
   )
@@ -75,42 +76,39 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
         {/* Overview */}
         <section className="px-4 py-3 border-b border-border">
           <SectionHeader title="Overview" />
-          <div className="grid grid-cols-2 gap-x-6 text-xs">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-              <DetailRow
-                label="Job ID"
-                value={
-                  <span className="inline-flex items-center gap-2">
-                    {job_id}
-                    <CopyButton value={job_id} />
-                  </span>
-                }
-              />
-              {username && (
-                <DetailRow
-                  label="Username"
-                  value={
-                    <span className="inline-flex items-center gap-2">
-                      {username}
-                      <CopyButton value={username} />
-                    </span>
-                  }
-                />
-              )}
-              {duration && <DetailRow label="Duration" value={duration} />}
-              {retry !== undefined && maxRetry !== undefined && (
-                <DetailRow label="Retry" value={`${retry} / ${maxRetry}`} />
-              )}
-            </dl>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-              {typeof startedE?.timestamp === 'string' && (
-                <DetailRow label="Started" value={formatTimestamp(startedE.timestamp, utc)} />
-              )}
-              {typeof completedE?.timestamp === 'string' && (
-                <DetailRow label="Completed" value={formatTimestamp(completedE.timestamp, utc)} />
-              )}
-            </dl>
-          </div>
+          {(() => {
+            const leftFields: { label: string; value: React.ReactNode }[] = [
+              { label: 'Job ID', value: <span className="inline-flex items-center gap-2">{job_id}<CopyButton value={job_id} /></span> },
+              ...(username ? [{ label: 'Username', value: <span className="inline-flex items-center gap-2">{username}<CopyButton value={username} /></span> }] : []),
+              ...(duration ? [{ label: 'Duration', value: duration }] : []),
+              ...(retry !== undefined && maxRetry !== undefined ? [{ label: 'Retry', value: `${retry} / ${maxRetry}` }] : []),
+            ]
+            const rightFields: { label: string; value: React.ReactNode }[] = [
+              ...(typeof startedE?.timestamp === 'string' ? [{ label: 'Started', value: formatTimestamp(startedE.timestamp, utc) }] : []),
+              ...(typeof completedE?.timestamp === 'string' ? [{ label: 'Completed', value: formatTimestamp(completedE.timestamp, utc) }] : []),
+            ]
+            const rows = Math.max(leftFields.length, rightFields.length)
+            return (
+              <dl className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-1.5 text-xs items-center [grid-auto-rows:minmax(1.25rem,auto)]">
+                {Array.from({ length: rows }).map((_, i) => {
+                  const left = leftFields[i]
+                  const right = rightFields[i]
+                  return (
+                    <Fragment key={i}>
+                      {left
+                        ? <><dt className="text-muted-foreground whitespace-nowrap">{left.label}</dt><dd>{left.value}</dd></>
+                        : <><dt /><dd /></>
+                      }
+                      {right
+                        ? <><dt className="text-muted-foreground whitespace-nowrap pl-4">{right.label}</dt><dd>{right.value}</dd></>
+                        : <><dt /><dd /></>
+                      }
+                    </Fragment>
+                  )
+                })}
+              </dl>
+            )
+          })()}
         </section>
 
         {/* Timeline */}

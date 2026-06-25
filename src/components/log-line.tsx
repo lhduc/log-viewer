@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { LogEntry } from '@/types/log'
 import { getLevel, getMessage, formatTimestamp, LEVEL_STYLES } from '@/lib/log-utils'
 import { cn } from '@/lib/utils'
+import { CopyButton } from './copy-button'
 
 interface LogLineProps {
   entry: LogEntry
@@ -50,9 +51,15 @@ export function LogLine({ entry, rawMode, style }: LogLineProps) {
         <span className="truncate text-foreground">{message}</span>
       </div>
       {expanded && (
-        <pre className="mt-1 font-mono text-muted-foreground whitespace-pre-wrap break-all bg-muted rounded p-2">
-          {JSON.stringify(rest, null, 2)}
-        </pre>
+        <div className="mt-1 relative">
+          <CopyButton
+            value={JSON.stringify(rest, null, 2)}
+            className="absolute top-1.5 right-1.5 z-10"
+          />
+          <pre className="font-mono text-muted-foreground whitespace-pre-wrap break-all bg-muted rounded p-2 pr-7">
+            {JSON.stringify(rest, null, 2)}
+          </pre>
+        </div>
       )}
     </div>
   )
