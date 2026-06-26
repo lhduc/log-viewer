@@ -43,19 +43,3 @@ export function formatTimestamp(ts: unknown, utc = false, compact = false): stri
     return String(ts).slice(0, 12)
   }
 }
-
-// Day + Time only (no year/month) — used in list rows for compact mobile display
-export function formatTimestampDayTime(ts: unknown, utc = false): string {
-  if (!ts) return ''
-  try {
-    const d = new Date(String(ts))
-    if (isNaN(d.getTime())) return String(ts).slice(0, 12)
-    if (utc) {
-      const iso = d.toISOString()
-      return iso.slice(8, 10) + ' ' + iso.slice(11, 19)
-    }
-    return format(d, 'dd HH:mm:ss')
-  } catch {
-    return String(ts).slice(0, 12)
-  }
-}

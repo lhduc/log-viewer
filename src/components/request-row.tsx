@@ -23,7 +23,6 @@ export function RequestRow({ entry, selected, onClick, onBookmark }: RequestRowP
   const bookmarked = entry.request_id ? isBookmarked(entry.request_id) : false
   const path = getUriPath(entry.uri)
   const timeCompact = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts, utc, true)
-  const datetime = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts, utc)
   const requestId = entry.request_id as string | undefined
   const username = entry.username as string | undefined
 
@@ -112,7 +111,7 @@ export function RequestRow({ entry, selected, onClick, onBookmark }: RequestRowP
       {/* Line 2: request_id, bookmark, username (shared) */}
       {secondaryLine}
 
-      {/* Mobile (< sm): line 3 — status | duration | full datetime */}
+      {/* Mobile (< sm): line 3 — status | duration | time */}
       <div className="flex sm:hidden items-center gap-2 pl-[calc(3.5rem+0.75rem)] mt-0.5">
         {statusBadge}
         <span className="shrink-0 text-muted-foreground">{formatDuration(entry.seconds)}</span>

@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile'
 import type { LogEntry } from '@/types/log'
 import type { JobGroup } from '@/lib/job-utils'
 import { groupJobs, hasJobId, getJobDuration } from '@/lib/job-utils'
-import { formatTimestamp, formatTimestampDayTime } from '@/lib/log-utils'
+import { formatTimestamp } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { useSettings } from '@/contexts/settings-context'
 import { Input } from '@/components/ui/input'
@@ -97,7 +97,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
 
         <span className="shrink-0 text-muted-foreground w-20 text-right">
           {typeof startedE?.timestamp === 'string'
-            ? formatTimestampDayTime(startedE.timestamp, utc)
+            ? formatTimestamp(startedE.timestamp, utc, true)
             : ''}
         </span>
       </div>
