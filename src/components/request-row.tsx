@@ -116,7 +116,7 @@ export function RequestRow({ entry, selected, onClick, onBookmark }: RequestRowP
       <div className="flex sm:hidden items-center gap-2 pl-[calc(3.5rem+0.75rem)] mt-0.5">
         {statusBadge}
         <span className="shrink-0 text-muted-foreground">{formatDuration(entry.seconds)}</span>
-        {datetime && <span className="ml-auto shrink-0 text-muted-foreground/70">{datetime}</span>}
+        {timeCompact && <span className="ml-auto shrink-0 text-muted-foreground/70">{timeCompact}</span>}
       </div>
     </div>
   )
