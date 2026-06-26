@@ -34,7 +34,7 @@ export function TimeModeToggle() {
   const { mode, toggle } = useTimeMode()
   const now = useClock()
 
-  if (!now) return <div className="h-7 w-52" />
+  if (!now) return <div className="h-7 w-20 sm:w-52" />
 
   const utc = mode === 'utc'
 
@@ -46,7 +46,9 @@ export function TimeModeToggle() {
       onClick={toggle}
       title="Toggle UTC / local time"
     >
-      {formatClock(now, utc)} {getOffset(now, utc)}
+      <span className="hidden sm:inline">{formatClock(now, utc)}</span>
+      <span className="inline sm:hidden">{utc ? now.toISOString().slice(11, 19) : `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`}</span>
+      {' '}{getOffset(now, utc)}
     </Button>
   )
 }
