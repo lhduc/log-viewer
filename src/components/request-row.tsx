@@ -3,7 +3,7 @@
 import { Bookmark } from 'lucide-react'
 import type { HttpLogEntry } from '@/types/log'
 import { formatDuration, getMethodStyle, getStatusStyle, getUriPath } from '@/lib/request-utils'
-import { formatTimestamp } from '@/lib/log-utils'
+import { formatTimestampDayTime } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { useBookmarks } from '@/contexts/bookmark-context'
 import { CopyButton } from './copy-button'
@@ -21,7 +21,7 @@ export function RequestRow({ entry, selected, onClick, onBookmark }: RequestRowP
   const { isBookmarked } = useBookmarks()
   const bookmarked = entry.request_id ? isBookmarked(entry.request_id) : false
   const path = getUriPath(entry.uri)
-  const time = formatTimestamp(entry.timestamp ?? entry.time ?? entry.ts, mode === 'utc', true)
+  const time = formatTimestampDayTime(entry.timestamp ?? entry.time ?? entry.ts, mode === 'utc')
   const requestId = entry.request_id as string | undefined
   const username = entry.username as string | undefined
 
@@ -56,7 +56,7 @@ export function RequestRow({ entry, selected, onClick, onBookmark }: RequestRowP
         </span>
 
         {time && (
-          <span className="shrink-0 text-muted-foreground w-20 text-right hidden sm:block">
+          <span className="shrink-0 text-muted-foreground w-20 text-right">
             {time}
           </span>
         )}
