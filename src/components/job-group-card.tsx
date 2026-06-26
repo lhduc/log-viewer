@@ -112,16 +112,16 @@ function QueryRow({ entry }: { entry: LogEntry }) {
         <span className="shrink-0 font-semibold text-[10px] uppercase w-9 mt-px text-violet-500 dark:text-violet-400">SQL</span>
         <div className="flex-1 min-w-0">
           {funcName && (
-            <span className="block font-mono text-xs text-foreground truncate">{funcName}</span>
+            <span className="block font-mono text-xs text-foreground break-all sm:truncate">{funcName}</span>
           )}
           {caller && (
-            <span className="block font-mono text-[10px] text-muted-foreground/60 truncate">{caller}</span>
+            <span className="block font-mono text-[10px] text-muted-foreground/60 break-all sm:truncate">{caller}</span>
           )}
           {!funcName && !caller && (
-            <span className="block font-mono text-xs text-muted-foreground truncate">{sql}</span>
+            <span className="block font-mono text-xs text-muted-foreground break-all sm:truncate">{sql}</span>
           )}
           {error && (
-            <span className="block font-mono text-[10px] text-red-500 dark:text-red-400 truncate">{error}</span>
+            <span className="block font-mono text-[10px] text-red-500 dark:text-red-400 break-all sm:truncate">{error}</span>
           )}
         </div>
         <div className="shrink-0 flex flex-col items-end gap-0.5">
