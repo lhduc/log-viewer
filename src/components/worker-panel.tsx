@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { EyeOff } from 'lucide-react'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import type { LogEntry } from '@/types/log'
 import type { JobGroup } from '@/lib/job-utils'
 import { groupJobs, hasJobId, getJobDuration } from '@/lib/job-utils'
@@ -27,6 +28,9 @@ const QUICK_RANGES = [
 const DETAIL_WIDTH_DEFAULT = 55
 const DETAIL_WIDTH_MIN = 25
 const DETAIL_WIDTH_MAX = 80
+const DETAIL_HEIGHT_DEFAULT = 50
+const DETAIL_HEIGHT_MIN = 20
+const DETAIL_HEIGHT_MAX = 80
 
 function toDatetimeLocal(d: Date, utc: boolean): string {
   if (utc) return d.toISOString().slice(0, 19)
@@ -74,7 +78,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
           {statusLabel}
         </span>
 
-        <span className="flex-1 text-foreground truncate">{group.type}</span>
+        <span className="flex-1 text-foreground break-all sm:truncate">{group.type}</span>
 
         {group.updates.length > 0 && (
           <span className="shrink-0 px-1.5 py-0.5 rounded border text-[10px] text-sky-600 border-sky-300 bg-sky-50 dark:text-sky-300 dark:border-sky-600 dark:bg-sky-950">
@@ -100,7 +104,7 @@ function JobListRow({ group, selected, onClick }: { group: JobGroup; selected: b
 
       {/* Secondary line: job_id left, username right */}
       <div className="mt-0.5 flex items-center gap-1.5 pl-[calc(3.5rem+0.75rem)]">
-        <span className="text-[10px] text-muted-foreground/60 truncate">{group.job_id}</span>
+        <span className="text-[10px] text-muted-foreground/60 break-all sm:truncate">{group.job_id}</span>
         <span className="opacity-0 group-hover:opacity-100 transition-opacity">
           <CopyButton value={group.job_id} />
         </span>
@@ -132,6 +136,8 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
   const [excludedOpen, setExcludedOpen] = useState(false)
   const [selected, setSelected] = useState<JobGroup | null>(null)
   const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
+  const [detailHeight, setDetailHeight] = useState(DETAIL_HEIGHT_DEFAULT)
+  const isMobile = useIsMobile()
   const splitRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -237,6 +243,24 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
     document.addEventListener('mouseup', onMouseUp)
   }, [])
 
+  const onRowDividerPointerDown = useCallback((e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragging.current = true
+    const onPointerMove = (ev: PointerEvent) => {
+      if (!dragging.current || !splitRef.current) return
+      const rect = splitRef.current.getBoundingClientRect()
+      const pct = ((rect.bottom - ev.clientY) / rect.height) * 100
+      setDetailHeight(Math.min(DETAIL_HEIGHT_MAX, Math.max(DETAIL_HEIGHT_MIN, pct)))
+    }
+    const onPointerUp = () => {
+      dragging.current = false
+      document.removeEventListener('pointermove', onPointerMove)
+      document.removeEventListener('pointerup', onPointerUp)
+    }
+    document.addEventListener('pointermove', onPointerMove)
+    document.addEventListener('pointerup', onPointerUp)
+  }, [])
+
   const hasFilters = !!search || !!usernameFilter || !!timeFrom || !!timeTo
   const clearFilters = () => { setSearch(''); setUsernameFilter(''); setTimeFrom(''); setTimeTo('') }
 
@@ -314,56 +338,111 @@ export function WorkerPanel({ logs }: WorkerPanelProps) {
       </div>
 
       {/* Split: job list + detail panel */}
-      <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
-        <div
-          className="relative min-h-0"
-          style={{ width: selectedGroup ? `${100 - detailWidth}%` : '100%' }}
-        >
+      {isMobile && selectedGroup ? (
+        /* Mobile: vertical split — list on top, detail on bottom */
+        <div ref={splitRef} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <div
-            className="absolute inset-0 overflow-y-auto flex flex-col"
-            onScroll={onListScroll}
+            className="relative min-h-0"
+            style={{ height: `${100 - detailHeight}%` }}
           >
-            {filteredGroups.length === 0 ? (
-              <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-                {logs.length === 0 ? 'Waiting for logs…' : 'No jobs match filters'}
-              </div>
-            ) : (
-              filteredGroups.map(group => (
-                <JobListRow
-                  key={group.job_id}
-                  group={group}
-                  selected={selectedGroup?.job_id === group.job_id}
-                  onClick={() => setSelected(prev => prev?.job_id === group.job_id ? null : group)}
-                />
-              ))
-            )}
-            <div ref={bottomRef} />
-          </div>
-          {scrollPaused && (
-            <button
-              onClick={resumeScroll}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1.5 rounded-full shadow-lg z-10"
+            <div
+              className="absolute inset-0 overflow-y-auto flex flex-col"
+              onScroll={onListScroll}
             >
-              ↓ Resume auto-scroll
-            </button>
+              {filteredGroups.length === 0 ? (
+                <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+                  {logs.length === 0 ? 'Waiting for logs…' : 'No jobs match filters'}
+                </div>
+              ) : (
+                filteredGroups.map(group => (
+                  <JobListRow
+                    key={group.job_id}
+                    group={group}
+                    selected={selectedGroup?.job_id === group.job_id}
+                    onClick={() => setSelected(prev => prev?.job_id === group.job_id ? null : group)}
+                  />
+                ))
+              )}
+              <div ref={bottomRef} />
+            </div>
+            {scrollPaused && (
+              <button
+                onClick={resumeScroll}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1.5 rounded-full shadow-lg z-10"
+              >
+                ↓ Resume auto-scroll
+              </button>
+            )}
+          </div>
+
+          {/* Horizontal drag handle */}
+          <div
+            onPointerDown={onRowDividerPointerDown}
+            className="h-1.5 shrink-0 cursor-row-resize bg-border hover:bg-primary/40 transition-colors touch-none flex items-center justify-center"
+          >
+            <div className="w-8 h-0.5 rounded-full bg-muted-foreground/40" />
+          </div>
+
+          <div
+            className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-bottom-4 duration-200"
+            style={{ height: `${detailHeight}%` }}
+          >
+            <JobDetail group={selectedGroup} onClose={() => setSelected(null)} />
+          </div>
+        </div>
+      ) : (
+        /* Desktop: horizontal split */
+        <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
+          <div
+            className="relative min-h-0"
+            style={{ width: selectedGroup ? `${100 - detailWidth}%` : '100%' }}
+          >
+            <div
+              className="absolute inset-0 overflow-y-auto flex flex-col"
+              onScroll={onListScroll}
+            >
+              {filteredGroups.length === 0 ? (
+                <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
+                  {logs.length === 0 ? 'Waiting for logs…' : 'No jobs match filters'}
+                </div>
+              ) : (
+                filteredGroups.map(group => (
+                  <JobListRow
+                    key={group.job_id}
+                    group={group}
+                    selected={selectedGroup?.job_id === group.job_id}
+                    onClick={() => setSelected(prev => prev?.job_id === group.job_id ? null : group)}
+                  />
+                ))
+              )}
+              <div ref={bottomRef} />
+            </div>
+            {scrollPaused && (
+              <button
+                onClick={resumeScroll}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1.5 rounded-full shadow-lg z-10"
+              >
+                ↓ Resume auto-scroll
+              </button>
+            )}
+          </div>
+
+          {selectedGroup && (
+            <>
+              <div
+                onMouseDown={onDividerMouseDown}
+                className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40 transition-colors"
+              />
+              <div
+                className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-right-4 duration-200"
+                style={{ width: `${detailWidth}%` }}
+              >
+                <JobDetail group={selectedGroup} onClose={() => setSelected(null)} />
+              </div>
+            </>
           )}
         </div>
-
-        {selectedGroup && (
-          <>
-            <div
-              onMouseDown={onDividerMouseDown}
-              className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40 transition-colors"
-            />
-            <div
-              className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-right-4 duration-200"
-              style={{ width: `${detailWidth}%` }}
-            >
-              <JobDetail group={selectedGroup} onClose={() => setSelected(null)} />
-            </div>
-          </>
-        )}
-      </div>
+      )}
     </div>
   )
 }

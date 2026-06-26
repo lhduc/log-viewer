@@ -89,7 +89,7 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
             ]
             const rows = Math.max(leftFields.length, rightFields.length)
             return (
-              <dl className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-1.5 text-xs items-center [grid-auto-rows:minmax(1.25rem,auto)]">
+              <dl className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-1.5 text-xs items-center [grid-auto-rows:minmax(1.25rem,auto)]">
                 {Array.from({ length: rows }).map((_, i) => {
                   const left = leftFields[i]
                   const right = rightFields[i]
@@ -97,11 +97,11 @@ export function JobDetail({ group, onClose }: JobDetailProps) {
                     <Fragment key={i}>
                       {left
                         ? <><dt className="text-muted-foreground whitespace-nowrap">{left.label}</dt><dd>{left.value}</dd></>
-                        : <><dt /><dd /></>
+                        : <><dt className="hidden sm:block" /><dd className="hidden sm:block" /></>
                       }
                       {right
-                        ? <><dt className="text-muted-foreground whitespace-nowrap pl-4">{right.label}</dt><dd>{right.value}</dd></>
-                        : <><dt /><dd /></>
+                        ? <><dt className="text-muted-foreground whitespace-nowrap sm:pl-4">{right.label}</dt><dd>{right.value}</dd></>
+                        : <><dt className="hidden sm:block" /><dd className="hidden sm:block" /></>
                       }
                     </Fragment>
                   )
