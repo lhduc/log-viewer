@@ -50,9 +50,7 @@ export function RequestRow({ entry, selected, onClick, onBookmark }: RequestRowP
       {requestId && (
         <>
           <span className="text-[10px] text-muted-foreground/60 truncate">{requestId}</span>
-          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-            <CopyButton value={requestId} />
-          </span>
+          <CopyButton value={requestId} />
         </>
       )}
       <button
