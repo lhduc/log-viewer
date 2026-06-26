@@ -19,6 +19,9 @@ import type { HttpLogEntry, LogEntry } from '@/types/log'
 const DETAIL_WIDTH_DEFAULT = 55  // percent
 const DETAIL_WIDTH_MIN = 25
 const DETAIL_WIDTH_MAX = 80
+const DETAIL_HEIGHT_DEFAULT = 50  // percent (mobile)
+const DETAIL_HEIGHT_MIN = 20
+const DETAIL_HEIGHT_MAX = 80
 
 interface LogPanelProps {
   containerIds: string[]
@@ -59,6 +62,7 @@ export function LogPanel({
   const [timeTo, setTimeTo] = useState('')
   const [selected, setSelected] = useState<HttpLogEntry | null>(null)
   const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
+  const [detailHeight, setDetailHeight] = useState(DETAIL_HEIGHT_DEFAULT)
   const isMobile = useIsMobile()
 
   const clear = useCallback(() => { clearStream(); setSelected(null) }, [clearStream])
@@ -157,7 +161,7 @@ export function LogPanel({
     setTimeTo('')
   }, [])
 
-  // Drag-to-resize the detail panel
+  // Desktop: horizontal drag to resize detail width
   const onDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     dragging.current = true
@@ -183,9 +187,34 @@ export function LogPanel({
     document.addEventListener('mouseup', onMouseUp)
   }, [])
 
-  // Reset width when panel closes
+  // Mobile: vertical drag to resize detail height
+  const onRowDividerPointerDown = useCallback((e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragging.current = true
+
+    const onPointerMove = (ev: PointerEvent) => {
+      if (!dragging.current || !splitRef.current) return
+      const rect = splitRef.current.getBoundingClientRect()
+      const pct = ((rect.bottom - ev.clientY) / rect.height) * 100
+      setDetailHeight(Math.min(DETAIL_HEIGHT_MAX, Math.max(DETAIL_HEIGHT_MIN, pct)))
+    }
+
+    const onPointerUp = () => {
+      dragging.current = false
+      document.removeEventListener('pointermove', onPointerMove)
+      document.removeEventListener('pointerup', onPointerUp)
+    }
+
+    document.addEventListener('pointermove', onPointerMove)
+    document.addEventListener('pointerup', onPointerUp)
+  }, [])
+
+  // Reset sizes when panel closes
   useEffect(() => {
-    if (!selected) setDetailWidth(DETAIL_WIDTH_DEFAULT)
+    if (!selected) {
+      setDetailWidth(DETAIL_WIDTH_DEFAULT)
+      setDetailHeight(DETAIL_HEIGHT_DEFAULT)
+    }
   }, [selected])
 
   const selectedJobs = selected?.request_id
@@ -226,55 +255,91 @@ export function LogPanel({
         onClearFilters={clearFilters}
       />
 
-      <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Request list — hidden on mobile when detail is open */}
-        <div
-          className="flex flex-col min-h-0 overflow-hidden"
-          style={{
-            width: selected && !isMobile ? `${100 - detailWidth}%` : '100%',
-            display: selected && isMobile ? 'none' : undefined,
-          }}
-        >
-          {filteredEntries.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-              {logs.length === 0 ? 'Waiting for logs…' : 'No requests match filters'}
-            </div>
-          ) : (
-            <RequestList
-              entries={filteredEntries}
-              selectedSeq={selected?._seq ?? null}
-              onSelect={entry => setSelected(prev => prev?._seq === entry._seq ? null : entry)}
+      {/* Mobile: vertical split — list on top, detail on bottom */}
+      {isMobile && selected ? (
+        <div ref={splitRef} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          {/* List — top portion */}
+          <div
+            className="flex flex-col min-h-0 overflow-hidden"
+            style={{ height: `${100 - detailHeight}%` }}
+          >
+            {filteredEntries.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                {logs.length === 0 ? 'Waiting for logs…' : 'No requests match filters'}
+              </div>
+            ) : (
+              <RequestList
+                entries={filteredEntries}
+                selectedSeq={selected._seq}
+                onSelect={entry => setSelected(prev => prev?._seq === entry._seq ? null : entry)}
+                onBookmark={handleBookmark}
+              />
+            )}
+          </div>
+
+          {/* Horizontal drag handle */}
+          <div
+            onPointerDown={onRowDividerPointerDown}
+            className="h-1.5 shrink-0 cursor-row-resize bg-border hover:bg-primary/40 transition-colors touch-none flex items-center justify-center"
+          >
+            <div className="w-8 h-0.5 rounded-full bg-muted-foreground/40" />
+          </div>
+
+          {/* Detail — bottom portion */}
+          <div
+            className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-bottom-4 duration-200"
+            style={{ height: `${detailHeight}%` }}
+          >
+            <RequestDetail
+              entry={selected}
+              onClose={() => setSelected(null)}
+              jobs={selectedJobs}
               onBookmark={handleBookmark}
             />
-          )}
+          </div>
         </div>
+      ) : (
+        /* Desktop: horizontal split */
+        <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
+          <div
+            className="flex flex-col min-h-0 overflow-hidden"
+            style={{ width: selected ? `${100 - detailWidth}%` : '100%' }}
+          >
+            {filteredEntries.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                {logs.length === 0 ? 'Waiting for logs…' : 'No requests match filters'}
+              </div>
+            ) : (
+              <RequestList
+                entries={filteredEntries}
+                selectedSeq={selected?._seq ?? null}
+                onSelect={entry => setSelected(prev => prev?._seq === entry._seq ? null : entry)}
+                onBookmark={handleBookmark}
+              />
+            )}
+          </div>
 
-        {/* Detail panel */}
-        {selected && (
-          <>
-            {/* Resize handle — desktop only */}
-            {!isMobile && (
+          {selected && (
+            <>
               <div
                 onMouseDown={onDividerMouseDown}
                 className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40 transition-colors"
               />
-            )}
-
-            {/* Detail panel — full width on mobile, split on desktop */}
-            <div
-              className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-right-4 duration-200"
-              style={{ width: isMobile ? '100%' : `${detailWidth}%` }}
-            >
-              <RequestDetail
-                entry={selected}
-                onClose={() => setSelected(null)}
-                jobs={selectedJobs}
-                onBookmark={handleBookmark}
-              />
-            </div>
-          </>
-        )}
-      </div>
+              <div
+                className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-right-4 duration-200"
+                style={{ width: `${detailWidth}%` }}
+              >
+                <RequestDetail
+                  entry={selected}
+                  onClose={() => setSelected(null)}
+                  jobs={selectedJobs}
+                  onBookmark={handleBookmark}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
