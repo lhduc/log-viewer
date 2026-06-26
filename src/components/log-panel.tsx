@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLogStream } from '@/hooks/use-log-stream'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { isHttpEntry, getStatusBucket } from '@/lib/request-utils'
 import { hasJobId } from '@/lib/job-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
@@ -58,6 +59,7 @@ export function LogPanel({
   const [timeTo, setTimeTo] = useState('')
   const [selected, setSelected] = useState<HttpLogEntry | null>(null)
   const [detailWidth, setDetailWidth] = useState(DETAIL_WIDTH_DEFAULT)
+  const isMobile = useIsMobile()
 
   const clear = useCallback(() => { clearStream(); setSelected(null) }, [clearStream])
 
@@ -225,10 +227,13 @@ export function LogPanel({
       />
 
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Request list */}
+        {/* Request list — hidden on mobile when detail is open */}
         <div
           className="flex flex-col min-h-0 overflow-hidden"
-          style={{ width: selected ? `${100 - detailWidth}%` : '100%' }}
+          style={{
+            width: selected && !isMobile ? `${100 - detailWidth}%` : '100%',
+            display: selected && isMobile ? 'none' : undefined,
+          }}
         >
           {filteredEntries.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
@@ -244,19 +249,21 @@ export function LogPanel({
           )}
         </div>
 
-        {/* Drag divider + detail panel */}
+        {/* Detail panel */}
         {selected && (
           <>
-            {/* Resize handle */}
-            <div
-              onMouseDown={onDividerMouseDown}
-              className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40 transition-colors"
-            />
+            {/* Resize handle — desktop only */}
+            {!isMobile && (
+              <div
+                onMouseDown={onDividerMouseDown}
+                className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40 transition-colors"
+              />
+            )}
 
-            {/* Detail panel with distinct background */}
+            {/* Detail panel — full width on mobile, split on desktop */}
             <div
               className="flex flex-col min-h-0 overflow-hidden bg-card animate-in slide-in-from-right-4 duration-200"
-              style={{ width: `${detailWidth}%` }}
+              style={{ width: isMobile ? '100%' : `${detailWidth}%` }}
             >
               <RequestDetail
                 entry={selected}

@@ -24,8 +24,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
-      <header className="shrink-0 flex items-center gap-2 px-4 h-10 border-b border-primary/20 bg-primary text-primary-foreground">
-        <span className="text-sm font-semibold flex items-center gap-1.5">
+      <header className="shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 h-10 border-b border-primary/20 bg-primary text-primary-foreground">
+        <span className="text-sm font-semibold hidden sm:flex items-center gap-1.5">
           Log Viewer
         </span>
         <div className="flex-1" />

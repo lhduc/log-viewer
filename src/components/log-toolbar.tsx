@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { EyeOff, Search } from 'lucide-react'
+import { EyeOff, Search, SlidersHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -83,6 +83,7 @@ export function LogToolbar({
   const [inputValue, setInputValue] = useState(search)
   const [usernameValue, setUsernameValue] = useState(usernameFilter)
   const [excludedOpen, setExcludedOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const { mode } = useTimeMode()
   const { excludedUrls } = useSettings()
 
@@ -101,8 +102,8 @@ export function LogToolbar({
 
   const hasFilters = methodFilter.size > 0 || statusFilter !== 'all' || !!search || !!usernameFilter || !!timeFrom || !!timeTo
 
-  return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted flex-wrap">
+  const filterChips = (
+    <>
       {/* Method chips */}
       <div className="flex items-center gap-1">
         {METHODS.map(method => {
@@ -125,7 +126,7 @@ export function LogToolbar({
         })}
       </div>
 
-      <div className="w-px h-4 bg-border" />
+      <div className="w-px h-4 bg-border shrink-0" />
 
       {/* Status chips */}
       <div className="flex items-center gap-1">
@@ -149,18 +150,7 @@ export function LogToolbar({
         })}
       </div>
 
-      <div className="w-px h-4 bg-border" />
-
-      {/* URI / ID search */}
-      <div className="relative">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-        <Input
-          value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
-          placeholder="Search URI, request ID, job ID…"
-          className="h-6 text-xs w-56 pl-6"
-        />
-      </div>
+      <div className="w-px h-4 bg-border shrink-0" />
 
       {/* Username filter */}
       <Input
@@ -170,7 +160,7 @@ export function LogToolbar({
         className="h-6 text-xs w-28"
       />
 
-      <div className="w-px h-4 bg-border" />
+      <div className="w-px h-4 bg-border shrink-0" />
 
       {/* Quick ranges */}
       <div className="flex items-center gap-1">
@@ -191,7 +181,7 @@ export function LogToolbar({
         ))}
       </div>
 
-      <div className="w-px h-4 bg-border" />
+      <div className="w-px h-4 bg-border shrink-0" />
 
       {/* Time range */}
       <DateTimeRangePicker
@@ -215,28 +205,75 @@ export function LogToolbar({
       >
         <EyeOff size={13} />
       </button>
+    </>
+  )
+
+  return (
+    <div className="border-b border-border bg-muted">
+      {/* Primary row — always visible */}
+      <div className="flex items-center gap-2 px-3 py-2">
+        {/* Search input */}
+        <div className="relative flex-1 sm:flex-none">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+          <Input
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            placeholder="Search URI, request ID, job ID…"
+            className="h-6 text-xs w-full sm:w-56 pl-6"
+          />
+        </div>
+
+        {/* Desktop: inline filters */}
+        <div className="hidden sm:contents">
+          {filterChips}
+        </div>
+
+        {/* Mobile: filter toggle */}
+        <button
+          onClick={() => setFiltersOpen(v => !v)}
+          className={cn(
+            'sm:hidden shrink-0 h-6 w-6 flex items-center justify-center rounded transition-colors relative',
+            filtersOpen || hasFilters
+              ? 'text-primary bg-primary/10'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          )}
+          aria-label="Toggle filters"
+        >
+          <SlidersHorizontal size={13} />
+          {hasFilters && !filtersOpen && (
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />
+          )}
+        </button>
+
+        <div className="flex-1 hidden sm:block" />
+
+        <span className="text-[10px] text-muted-foreground shrink-0">
+          {filteredCount} / {totalCount}
+        </span>
+
+        {hasFilters && (
+          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={onClearFilters}>
+            Clear filters
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 text-xs px-2 text-destructive hover:text-destructive"
+          onClick={onClear}
+        >
+          Clear
+        </Button>
+      </div>
+
+      {/* Mobile: expandable filter row */}
+      {filtersOpen && (
+        <div className="sm:hidden flex items-center gap-2 px-3 pb-2 flex-wrap">
+          {filterChips}
+        </div>
+      )}
 
       <ExcludedUrlsDialog open={excludedOpen} onOpenChange={setExcludedOpen} />
-
-      <div className="flex-1" />
-
-      <span className="text-[10px] text-muted-foreground shrink-0">
-        {filteredCount} / {totalCount}
-      </span>
-
-      {hasFilters && (
-        <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={onClearFilters}>
-          Clear filters
-        </Button>
-      )}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 text-xs px-2 text-destructive hover:text-destructive"
-        onClick={onClear}
-      >
-        Clear
-      </Button>
     </div>
   )
 }
