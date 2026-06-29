@@ -28,7 +28,7 @@ export default function Home() {
         <span className="text-sm font-semibold hidden sm:flex items-center gap-1.5">
           Log Viewer
         </span>
-        <div className="sm:ml-auto">
+        <div className="mr-auto sm:mr-0 sm:ml-auto">
           <SourceSwitcher />
         </div>
         <TimeModeToggle />

@@ -110,10 +110,10 @@ export function SourceSwitcher() {
     <>
       <button
         onClick={openDialog}
-        className={cn('h-6 px-2 flex items-center gap-1.5 text-xs rounded-full border cursor-pointer hover:opacity-80 transition-opacity', chipColor)}
+        className={cn('h-6 px-2 flex items-center gap-1.5 text-xs rounded-full border cursor-pointer hover:opacity-80 transition-opacity w-[150px] sm:w-auto', chipColor)}
       >
         <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', dotColor)} />
-        <span className="max-w-48 truncate">{chipLabel}</span>
+        <span className="flex-1 min-w-0 truncate">{chipLabel}</span>
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
