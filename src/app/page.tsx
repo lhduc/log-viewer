@@ -28,8 +28,9 @@ export default function Home() {
         <span className="text-sm font-semibold hidden sm:flex items-center gap-1.5">
           Log Viewer
         </span>
-        <div className="flex-1" />
-        <SourceSwitcher />
+        <div className="sm:ml-auto">
+          <SourceSwitcher />
+        </div>
         <TimeModeToggle />
         <button
           onClick={() => setShowBookmarks(v => !v)}
