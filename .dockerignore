@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.idea
+.env*
+!.env.example
+k8s-allowlist.yaml
+plans
+docs
+.claude
+.context-pilot
+npm-debug.log*
+*.tsbuildinfo
+README.md

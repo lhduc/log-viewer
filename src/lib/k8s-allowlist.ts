@@ -19,7 +19,7 @@ function loadAllowlist(): AllowlistFile {
   const filePath = process.env.K8S_ALLOWLIST_PATH ?? join(process.cwd(), 'k8s-allowlist.yaml')
   let raw: string
   try {
-    raw = readFileSync(filePath, 'utf8')
+    raw = readFileSync(/* turbopackIgnore: true */ filePath, 'utf8')
   } catch {
     throw new Error(
       `k8s-allowlist.yaml not found at ${filePath}. Copy k8s-allowlist.example.yaml and edit it.`
