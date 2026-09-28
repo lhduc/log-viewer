@@ -8,7 +8,7 @@ import { groupJobs, getJobDuration, hasJobId, type JobGroup } from '@/lib/job-ut
 import { formatTimestamp } from '@/lib/log-utils'
 import { useTimeMode } from '@/contexts/time-mode-context'
 import { useBookmarks } from '@/contexts/bookmark-context'
-import { JsonViewer } from './json-viewer'
+import { JsonViewer, toDisplayText } from './json-viewer'
 import { CopyButton } from './copy-button'
 import { JobGroupCard, UpdateRow } from './job-group-card'
 import { cn } from '@/lib/utils'
@@ -186,7 +186,7 @@ export function RequestDetail({ entry, onClose, jobs, onBookmark }: RequestDetai
             <div className="relative">
               <JsonViewer data={request} />
               <div className="absolute top-1.5 right-1.5">
-                <CopyButton value={typeof request === 'string' ? request : JSON.stringify(request, null, 2)} className="bg-muted hover:bg-accent" />
+                <CopyButton value={toDisplayText(request)} className="bg-muted hover:bg-accent" />
               </div>
             </div>
           </section>
@@ -210,7 +210,7 @@ export function RequestDetail({ entry, onClose, jobs, onBookmark }: RequestDetai
             <div className="relative">
               <JsonViewer data={response} />
               <div className="absolute top-1.5 right-1.5">
-                <CopyButton value={typeof response === 'string' ? response : JSON.stringify(response, null, 2)} className="bg-muted hover:bg-accent" />
+                <CopyButton value={toDisplayText(response)} className="bg-muted hover:bg-accent" />
               </div>
             </div>
           </section>

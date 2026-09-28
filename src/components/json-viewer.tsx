@@ -62,8 +62,17 @@ function highlightLine(line: string, lineIdx: number) {
   return <Fragment key={lineIdx}>{parts}{'\n'}</Fragment>
 }
 
+export function toDisplayText(data: unknown): string {
+  if (typeof data !== 'string') return JSON.stringify(data, null, 2)
+  try {
+    return JSON.stringify(JSON.parse(data), null, 2)
+  } catch {
+    return data
+  }
+}
+
 export function JsonViewer({ data }: JsonViewerProps) {
-  const text = typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+  const text = toDisplayText(data)
   const lines = text.split('\n')
 
   return (
