@@ -1,4 +1,4 @@
-import { getContainerLogStream } from '@/lib/docker-client'
+import { getContainerLogStream, isLocalDockerEnabled } from '@/lib/docker-client'
 import { demuxDockerStream } from '@/lib/log-demux'
 import { sseError } from '@/lib/api-error'
 
@@ -6,6 +6,10 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isLocalDockerEnabled()) {
+    return new Response(JSON.stringify({ error: 'Local Docker disabled' }), { status: 403 })
+  }
+
   const { id } = await params
   const tail = Number(new URL(req.url).searchParams.get('tail') ?? '100')
   const encoder = new TextEncoder()

@@ -3,6 +3,12 @@ import type { ContainerInfo } from '@/types/log'
 
 let client: Docker | null = null
 
+// Server-side enforcement of the same flag that hides the "Local Docker" UI option.
+// NEXT_PUBLIC_ vars are still readable in server code, so this closes the API off too.
+export function isLocalDockerEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_DISABLE_LOCAL_DOCKER !== 'true'
+}
+
 export function getDockerClient(): Docker {
   if (!client) {
     client = new Docker({ socketPath: '/var/run/docker.sock' })

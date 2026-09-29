@@ -1,5 +1,5 @@
 import { streamPodLogs } from '@/lib/k8s-client'
-import { isNamespaceAllowed } from '@/lib/k8s-allowlist'
+import { isNamespaceAllowed, filterAllowedPods } from '@/lib/k8s-allowlist'
 import { sseError } from '@/lib/api-error'
 
 // Accepts ?context=...&namespace=...&pods=pod1:container1,pod2:container2
@@ -18,13 +18,16 @@ export async function GET(req: Request) {
     return new Response(JSON.stringify({ error: 'Not allowed' }), { status: 403 })
   }
 
-  const targets = podsParam.split(',').map(s => {
+  const requestedTargets = podsParam.split(',').map(s => {
     const [pod, container] = s.split(':')
     return { pod: pod ?? '', container: container ?? '' }
   }).filter(t => t.pod && t.container)
 
+  const allowedPodNames = new Set(filterAllowedPods(context, namespace, requestedTargets.map(t => t.pod)))
+  const targets = requestedTargets.filter(t => allowedPodNames.has(t.pod))
+
   if (targets.length === 0) {
-    return new Response(JSON.stringify({ error: 'no valid pod:container pairs' }), { status: 400 })
+    return new Response(JSON.stringify({ error: 'no allowed pod:container pairs' }), { status: 403 })
   }
 
   const encoder = new TextEncoder()

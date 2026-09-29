@@ -1,8 +1,12 @@
-import { getContainerLogStream } from '@/lib/docker-client'
+import { getContainerLogStream, isLocalDockerEnabled } from '@/lib/docker-client'
 import { demuxDockerStream } from '@/lib/log-demux'
 import { sseError } from '@/lib/api-error'
 
 export async function GET(req: Request) {
+  if (!isLocalDockerEnabled()) {
+    return new Response(JSON.stringify({ error: 'Local Docker disabled' }), { status: 403 })
+  }
+
   const url = new URL(req.url)
   const containerIds = (url.searchParams.get('containers') ?? '')
     .split(',')

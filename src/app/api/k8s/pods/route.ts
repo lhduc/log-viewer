@@ -11,7 +11,8 @@ export async function GET(req: Request) {
   try {
     if (!isNamespaceAllowed(context, namespace)) return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
     const pods = await listPods(context, namespace)
-    return NextResponse.json(pods)
+    const allowedNames = new Set(filterAllowedPods(context, namespace, pods.map(p => p.name)))
+    return NextResponse.json(pods.filter(p => allowedNames.has(p.name)))
   } catch (err) {
     return apiError(err, `GET /api/k8s/pods context=${context} namespace=${namespace}`, 503)
   }

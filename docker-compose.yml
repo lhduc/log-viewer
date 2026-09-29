@@ -1,0 +1,16 @@
+services:
+  log-viewer:
+    image: lehongduc87/microhub:log-viewer-1.0.0
+    container_name: log-viewer
+    ports:
+      - "8801:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ~/.kube:/root/.kube:ro
+      # Copy k8s-allowlist.example.yaml to k8s-allowlist.yaml first (see README)
+      - ./k8s-allowlist.yaml:/app/k8s-allowlist.yaml:ro
+    environment:
+      NEXT_PUBLIC_DISABLE_LOCAL_DOCKER: "false"
+      # BASIC_AUTH_USER: admin
+      # BASIC_AUTH_PASS: change-me
+    restart: unless-stopped
